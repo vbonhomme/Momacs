@@ -13,6 +13,7 @@ library(shiny)
 library(shinydashboard)
 library(shinyjs)
 library(yaml)
+library(stringr)
 
 
 source("./pages/page_def_home.R", local = T)
@@ -39,35 +40,8 @@ server <- function( input, output, session) {
   typeValue <- ""
   typeValueSearchMarker <- ""
   
-  observeEvent(input$run, {
-    
-    numb <- toString(as.integer(runif(1, 0, 10^9)))
-    
-    newdir <<- paste0("./www/images/",numb)
-    dir.create(newdir)
-    
-    
-    file.copy(input$file1$datapath, newdir);
-    
-    newFile <<- paste0("./images/", numb, "/0.jpg")
-    
-    session$sendCustomMessage(type = 'testmessage',
-                              message = newFile)
-
-    
-  })
-  
-  observeEvent(input$delete, {
-    print("delete")
-    print(newdir)
-  
-    if(dir.exists(newdir)) {
-      unlink(newdir, recursive = TRUE, force = TRUE)
-    }
-    
-    
-    
-  })
+  shinyjs::hide("downloadData")
+  shinyjs::disable("downloadData")
   
   source("./server/opt_home.R", local=TRUE)
   

@@ -1,77 +1,174 @@
-            <div id="buttonWrapper">
-              
-               <!--input type="button" id="run" value="Run">-->
-                <!--<input type="button" id="plus" value="+"><input type="button" id="minus" value="-">-->
-            </div>
-            <canvas id="canvas" width="800" height="600" style="cursor:crosshair;"></canvas>
-            
-            <script>
-            
-               console.log("test");
+<div>
+  
+  <canvas id="canvas" width="800" height="600" style="cursor:crosshair;"></canvas>
+</div>
 
+<script>
+            
+              
 $("#canvas").click(function(e){
-     getPosition(e); 
+    getPosition(e); 
 });
 
+var pointSize = 3;
 
-    $('#canvas').bind('mousewheel', function(e){
-        if(e.originalEvent.wheelDelta /120 > 0) {
-            console.log('scrolling up !');
-        }
-        else{
-            console.log('scrolling down !');
-        }
-    });
+var ima2D = null;
 
-/*$("#run").click(function(e){
-                var canvas = document.getElementById("canvas");
+/**
+ * Object Image2D
+ **/
+function Image2D(path, image) {
+  this.path = path;
+  this.segmentID = 0;
+  this.arraySegment2D = [];
+  this.pointID = 0;
+  this.arrayPoint2D = [];
+  this.image = image;
+  this.finish = false;
+}
 
-                var translatePos = {
-                    x: canvas.width / 2,
-                    y: canvas.height / 2
-                };
+/**
+ * Object Segment2D
+ **/
+function Segment2D(id, p1, p2) {
+  this.id = id;
+  this.p1 = p1;
+  this.p2 = p2;
+}
 
-                var scale = 1.0;
-                var scaleMultiplier = 0.8;
-                var startDragOffset = {};
-                var mouseDown = false;
+/**
+ * Object Point2D  
+ **/
+function Point2D(id, x,y) {
+    this.id = id;
+    this.x = x;
+    this.y = y;
+}
 
-                // add event listeners to handle screen drag
-                canvas.addEventListener("mousedown", function(evt){
-                    mouseDown = true;
-                    startDragOffset.x = evt.clientX - translatePos.x;
-                    startDragOffset.y = evt.clientY - translatePos.y;
-                });
+function printPoint2D(point) {
+  var res = "Point2D-{id : " + point.id + "; x : " + point.x + "; y : " + point.y + "}\n";
+  console.log(res);
+}
 
-                canvas.addEventListener("mouseup", function(evt){
-                    mouseDown = false;
-                });
 
-                canvas.addEventListener("mouseover", function(evt){
-                    mouseDown = false;
-                });
+function getPosition(event){
+  if(ima2D) {
+    var rect = canvas.getBoundingClientRect();
+    var x = event.clientX - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
+    var y = event.clientY - rect.top; // y == the location of the click in the document - the location (relative to the top) of the canvas in the document
+    var p = new Point2D(ima2D.pointID, x, y);
+    ima2D.arrayPoint2D[ima2D.pointID] = p;
+    drawCoordinates(x,y);
+    if(ima2D.pointID > 0) {
+      drawSegment(ima2D.arrayPoint2D[ima2D.pointID-1], p);
+    } 
+    ima2D.pointID++;
+  }
+}
 
-                canvas.addEventListener("mouseout", function(evt){
-                    mouseDown = false;
-                });
-
-                canvas.addEventListener("mousemove", function(evt){
-                    if (mouseDown) {
-                        //translatePos.x = evt.clientX - startDragOffset.x;
-                        //translatePos.y = evt.clientY - startDragOffset.y;
-                        //draw(scale, translatePos);
-                    }
-                });
-
-                //draw(scale, translatePos);
-                
-    var ctx = document.getElementById('canvas');
-    if (ctx.getContext) {
-      
-    
-
-        ctx = ctx.getContext('2d');
+function drawCoordinates(x,y){
+        console.log("draw point" + x + " - " + y);
         
+        var ctx = document.getElementById("canvas").getContext("2d");
+        ctx.fillStyle = "#ff2626"; // Red color
+        ctx.beginPath(); //Start path
+        ctx.arc(x, y, pointSize, 0, Math.PI * 2, true); // Draw a point using the arc function of the canvas with a point structure.
+        //ctx.stroke();
+        ctx.fill(); // Close the path and fill.
+}
+
+function drawSegment(p1, p2) {
+    var ctx = document.getElementById("canvas").getContext("2d");
+    ctx.beginPath();
+    ctx.moveTo( p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.strokeStyle = "#ff2626";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fill();
+    var seg2D = new Segment2D(ima2D.segmentID, p1, p2);
+    ima2D.arraySegment2D[ima2D.segmentID] = seg2D;
+    ima2D.segmentID++;
+}
+
+function drawLastSegment() {
+  if(ima2D) {
+    if(ima2D.pointID > 2) { //minimum 3 points
+        drawSegment(ima2D.arrayPoint2D[0], ima2D.arrayPoint2D[ima2D.pointID-1]);
+    } else {
+       alert("We need minimum 3 points");
+    }
+  }
+}
+
+function drawPoint(p) {
+   ima2D.arrayPoint2D[ima2D.pointID] = p;
+   drawCoordinates(p.x, p.y);
+   ima2D.pointID++;
+}
+
+function deleteLastElement() {
+    if(ima2D) {
+      
+        var segmentID = ima2D.segmentID;
+        var arraySegment2D = ima2D.arraySegment2D;
+        
+        for (var i = 0; i < segmentID; i++) {
+          var s = ima2D.arraySegment2D[i];
+          arraySegment2D[i] = new Segment2D(s.id, s.p1, s.p2);
+        }
+        
+        var pointID = ima2D.pointID;
+        var arrayPoint2D = [];
+        for (var i = 0; i < pointID; i++) {
+           var p = ima2D.arrayPoint2D[i];
+           arrayPoint2D[i] = new Point2D(p.id, p.x, p.y);
+        }
+      
+        var path = ima2D.path;
+
+        var canvas = document.getElementById("canvas");
+        var ctx = document.getElementById('canvas');
+        
+        ctx = ctx.getContext('2d');
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+       
+        var img1 = new Image();
+        
+        img1.onload = function () {
+     
+            ctx.drawImage(img1, 0, 0);
+                        ctx.fillStyle = "rgba(127, 140, 141, 0.2)";
+            ctx.fillRect(0, 0, 800, 600);
+  
+            for (var i = 0; i < pointID - 1; i++) {
+              drawPoint(arrayPoint2D[i]);
+            }
+         
+             for (var i = 0; i < segmentID - 1; i++) {
+                drawSegment(arraySegment2D[i].p1, arraySegment2D[i].p2);
+             }
+        };
+        
+              img1.src = path;
+      
+              ima2D = new Image2D(path, img1);
+         
+
+    }
+}
+
+
+function drawImage(path) {
+  
+  var canvas = document.getElementById("canvas");
+  var ctx = document.getElementById('canvas');
+
+  if (ctx.getContext) {
+    
+        ctx = ctx.getContext('2d');
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -88,42 +185,12 @@ $("#canvas").click(function(e){
 
         };
         
-      /img1.src = name
-    }
-           
-
-});*/
-
-
-var pointSize = 3;
-
-function getPosition(event){
-     var rect = canvas.getBoundingClientRect();
-     var x = event.clientX - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
-     var y = event.clientY - rect.top; // y == the location of the click in the document - the location (relative to the top) of the canvas in the document
-     
-     // This method will handle the coordinates and will draw them in the canvas.
-
-	console.log("x : " + x);
-console.log("y : " + y);
-     drawCoordinates(x,y);
-}
-
-function foo(name) {
-  
-  console.log(name);
-  
-}
-
-function drawCoordinates(x,y){
-    var pointSize = 3; // Change according to the size of the point.
-    var ctx = document.getElementById("canvas").getContext("2d");
-
-
-    ctx.fillStyle = "#ff2626"; // Red color
-
-    ctx.beginPath(); //Start path
-    ctx.arc(x, y, pointSize, 0, Math.PI * 2, true); // Draw a point using the arc function of the canvas with a point structure.
-    ctx.fill(); // Close the path and fill.
+      imageLoad = true;
+        
+      img1.src = path;
+      
+      ima2D = new Image2D(path, img1);
+    
+  }
 }
   </script>
