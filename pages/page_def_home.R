@@ -1,9 +1,16 @@
 tabHome = fluidPage(
   
-  fileInput("file1", "Choose jpg file",
-            accept = c(
-              ".jpg")
-  ),
+  #fileInput("file1", "Choose jpg file",
+  #          accept = c(
+  #            ".jpg")
+  #),
+  
+  br(), br(),
+  
+  shinyFilesButton('files', label='Choose jpg file', title='Please select a jpg file', multiple=FALSE),
+  verbatimTextOutput('filepaths'),
+  
+  br(), br(),
   
   actionButton("run", "Run",  class="btn btn-success"),
   actionButton("end", "End",  class="btn btn-danger"),

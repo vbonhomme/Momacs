@@ -14,6 +14,7 @@ library(shinydashboard)
 library(shinyjs)
 library(yaml)
 library(stringr)
+library(shinyFiles)
 
 
 source("./pages/page_def_home.R", local = T)

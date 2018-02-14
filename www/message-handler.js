@@ -1,6 +1,9 @@
 Shiny.addCustomMessageHandler("run",
   
   function(path_image) {
+  
+    console.log(path_image);
+    
      if(path_image == "undefined") {
         alert("Please, load image before run");
      } else {

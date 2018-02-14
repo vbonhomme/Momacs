@@ -1,5 +1,4 @@
 <div>
-  
   <canvas id="canvas" width="800" height="600" style="cursor:crosshair;"></canvas>
 </div>
 
@@ -40,9 +39,16 @@ function Segment2D(id, p1, p2) {
  * Object Point2D  
  **/
 function Point2D(id, x,y) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
+  this.id = id;
+  this.x = x;
+  this.y = y;
+}
+
+function Partition(id, type) {
+   this.id = id;
+   this.type = type;
+   this.size = 0;
+   this.content = [];
 }
 
 function printPoint2D(point) {
@@ -50,6 +56,14 @@ function printPoint2D(point) {
   console.log(res);
 }
 
+/**
+ * @param part : Partition 
+ * @param element : Point2D or Segment2D or 
+ **/
+function addElementToPartition(part, element) {
+  
+  
+}
 
 function getPosition(event){
   if(ima2D) {

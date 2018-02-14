@@ -1,25 +1,35 @@
 observeEvent(input$run, {
+  roots = c(wd='/')
+  images <- parseFilePaths(roots, session$userData$imageFiles)
   
-  print(input$file1$datapath);
+  #TODO check when multi files
+  images <- toString(images$datapath)
+ 
+  #roots = c(wd='/')
+  #data <<- parseFilePaths(roots, input$files)
+
+  #print(data)
   
-  newFile <- "undefined"
+  #print(input$files$datapath);
   
-  if(!is.null(input$file1$datapath)) {
+  #newFile <- "undefined"
+  
+  if(!is.null(images)) {
     
     #TODO check exist
     
-    numb <- toString(as.integer(runif(1, 0, 10^9)))
+    #numb <- toString(as.integer(runif(1, 0, 10^9)))
     
-    newdir <- paste0("./www/images/",numb)
-    dir.create(newdir)
+    #newdir <- paste0("./www/images/",numb)
+    #dir.create(newdir)
     
-    file.copy(input$file1$datapath, newdir);
+    #file.copy(input$file1$datapath, newdir);
     
-    newFile <- paste0("./images/", numb, "/0.jpg")
+    #newFile <- paste0("./images/", numb, "/0.jpg")
   }
   
   session$sendCustomMessage(type = 'run',
-                            message = newFile)
+                            message = images)
 })
 
 observeEvent(input$end, {
@@ -42,6 +52,15 @@ observeEvent(input$clear, {
 
 observeEvent(input$deleteLastElement, {
   session$sendCustomMessage(type = 'deleteLastElement', message = "")
+})
+roots = c(wd='/')
+shinyFileChoose(input, 'files', root=roots)
+
+observeEvent(input$files, {
+
+  session$userData$imageFiles <- input$files
+  output$filepaths <- renderPrint({parseFilePaths(roots, input$files)})
+
 })
 
 observeEvent(input$endImage, {
