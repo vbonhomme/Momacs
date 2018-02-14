@@ -8,14 +8,18 @@ observeEvent(input$run, {
     
     #TODO check exist
     
-    numb <- toString(as.integer(runif(1, 0, 10^9)))
+    # numb <- toString(as.integer(runif(1, 0, 10^9)))
     
-    newdir <- paste0("./www/images/",numb)
-    dir.create(newdir)
+    # newdir <- paste0("./www/images/",numb)
+    newdir <- "images/tmp"
+    if (!dir.exists(newdir))
+      dir.create(newdir)
     
-    file.copy(input$file1$datapath, newdir);
+    # file.copy(input$file1$datapath, newdir);
     
-    newFile <- paste0("./images/", numb, "/0.jpg")
+    # newFile <- paste0("./images/", numb, "/0.jpg")
+    newFile <- "images/tmp/0.jpg"
+    file.copy(input$file1$datapath, newFile)
   }
   
   session$sendCustomMessage(type = 'run',
