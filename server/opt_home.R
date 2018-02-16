@@ -3,8 +3,9 @@ observeEvent(input$run, {
   images <- parseFilePaths(roots, session$userData$imageFiles)
   
   #TODO check when multi files
-  images <- toString(images$datapath)
- 
+  imagesPath <- toString(images$datapath)
+  imagesName <- toString(images$name)
+  
   #roots = c(wd='/')
   #data <<- parseFilePaths(roots, input$files)
 
@@ -12,25 +13,62 @@ observeEvent(input$run, {
   
   #print(input$files$datapath);
   
-  #newFile <- "undefined"
-  
+  newFile <- "undefined"
+  realPath <- "undefined"
   if(!is.null(images)) {
     
     #TODO check exist
+    # numb <- toString(as.integer(runif(1, 0, 10^9)))
     
-    #numb <- toString(as.integer(runif(1, 0, 10^9)))
+    # newdir <- paste0("./www/images/",numb)
     
-    #newdir <- paste0("./www/images/",numb)
-    #dir.create(newdir)
+    os <- get_os()
     
-    #file.copy(input$file1$datapath, newdir);
+    sep <- "/"
     
-    #newFile <- paste0("./images/", numb, "/0.jpg")
+    if(os == "linux") {
+      newdir <- "./www/images/tmp"
+      realPath <-  "./images/tmp"
+    } else if(os == "osx") {
+      newdir <- "images/tmp"
+      realPath <-  "images/tmp"
+    } else {
+      #TODO window
+       sep <- "\\"
+    }
+    
+    
+    if (!dir.exists(newdir))
+      dir.create(newdir)
+    
+    # file.copy(input$file1$datapath, newdir);
+    
+    # newFile <- paste0("./images/", numb, "/0.jpg")
+    newFile <- paste0(newdir, sep, imagesName)
+    realPath <- paste0(realPath, sep, imagesName)
+    file.copy(imagesPath, newFile)
+
   }
   
   session$sendCustomMessage(type = 'run',
-                            message = images)
+                            message = realPath)
 })
+
+get_os <- function(){
+  sysinf <- Sys.info()
+  if (!is.null(sysinf)){
+    os <- sysinf['sysname']
+    if (os == 'Darwin')
+      os <- "osx"
+  } else { ## mystery machine
+    os <- .Platform$OS.type
+    if (grepl("^darwin", R.version$os))
+      os <- "osx"
+    if (grepl("linux-gnu", R.version$os))
+      os <- "linux"
+  }
+  tolower(os)
+}
 
 observeEvent(input$end, {
   session$sendCustomMessage(type = 'end', message = "")
@@ -46,13 +84,6 @@ observeEvent(input$delete, {
   
 })
 
-observeEvent(input$clear, {
-  session$sendCustomMessage(type = 'clear', message = "")
-})
-
-observeEvent(input$deleteLastElement, {
-  session$sendCustomMessage(type = 'deleteLastElement', message = "")
-})
 roots = c(wd='/')
 shinyFileChoose(input, 'files', root=roots)
 

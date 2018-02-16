@@ -13,12 +13,22 @@ tabHome = fluidPage(
   br(), br(),
   
   actionButton("run", "Run",  class="btn btn-success"),
-  actionButton("end", "End",  class="btn btn-danger"),
+ # actionButton("end", "End",  class="btn btn-danger"),
   downloadButton("downloadData", "Download", class="btn btn-primary"),
   
   br(), br(),
-  actionButton("clear", "Clear Image", class="btn btn-warning"),
-  actionButton("deleteLastElement", "Delete Last Point", class="btn btn-warning"),
+  actionButton("buttonMoveImage", "Start move image", class="btn btn-primary"),
+  actionButton("clearImage", "Clear Image", class="btn btn-warning"),
+  
+  br(), br(),
+  
+  actionButton("buttonDrawPoint", "Start draw point", class="btn btn-primary"),
+  actionButton("buttonDrawSegment", "Start draw segment", class="btn btn-primary"),
+  actionButton("buttonDrawCurve", "Start draw curve", class="btn btn-primary"),
+  
+  br(), br(),
+  
+  actionButton("deleteLastElement", "Delete Last Element", class="btn btn-warning"),
   
   br(), br(),
   

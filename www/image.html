@@ -1,210 +1,577 @@
 <div>
   <canvas id="canvas" width="800" height="600" style="cursor:crosshair;"></canvas>
+  
 </div>
 
 <script>
+
+$('#canvas').css('background-color', 'rgba(127, 140, 141, 0.2)');
+
+var canvas = document.getElementById("canvas");
+canvas.started = false;
+canvas.width = 800;
+canvas.height = 600;
+canvas.state = "nothing";
+canvas.scaleFactor = 1.05;
+canvas.pointSize = 3;
+canvas.lastX=canvas.width/2;
+canvas.lastY=canvas.height/2;
+canvas.currentScale = 1;
+canvas.dragStart = null;
+
+canvas.indexPoint2D = 0;
+canvas.arrayPoint2D = [];
+
+canvas.indexSegment2D = 0;
+canvas.arraySegment2D = [];
+canvas.firstSegment = true;
+
+canvas.curve = null;
+
+//canvas.arrayPartionPoint2D = [];
+//canvas.arrayPartitionSegment2D = [];
+//canvas.arrayPartitionSegment2D = [];
+
+var ctx = null;
+var ima1 = null;
+
+window.onload = function(){ 
+          
+ctx = canvas.getContext('2d');
+trackTransforms(ctx);
+canvas.curve = new Curve2D(0);
+
+//===========================================================================
+
+canvas.addEventListener('click',function(evt)
+{
+    this.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+    this.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+    var pt = ctx.transformedPoint(this.lastX,this.lastY);
+    if(canvas.started && canvas.state == "drawPoint") {
+        this.drawCoordinates(pt.x,pt.y);
+        var point = new Point2D(this.indexSegment2D, pt.x, pt.y);
+        this.arrayPoint2D.push(point);
+        this.indexPoint2D++;
+    } else if(canvas.started && canvas.state == "drawSegment") {
+        this.drawCoordinates(pt.x,pt.y);
+        var p = new Point2D(this.indexPoint2D, pt.x, pt.y);
+        if(this.firstSegment) {
+           if(this.indexSegment2D == 0) {
+              var s = new Segment2D(this.indexSegment2D, p, null);
+              this.arraySegment2D.push(s);
+              this.indexSegment2D++;
+           } else {
+              this.arraySegment2D[this.indexSegment2D - 1].p2 = p;
+              this.drawLine(this.arraySegment2D[this.indexSegment2D - 1].p1, p);
+              this.firstSegment = false;
+           }
+        } else {
+          var lastp = this.arraySegment2D[this.indexSegment2D - 1].p2;
+          var s = new Segment2D(this.indexSegment2D, lastp, p);
+          this.drawLine(lastp, p);
+          this.arraySegment2D.push(s);
+          this.indexSegment2D++;
+        }
+    } else if(canvas.started && canvas.state == "drawCurve") {
+        var p = new Point2D(this.indexPoint2D, pt.x, pt.y);
+        this.curve.points.push(p);
+        this.curve.size++;
+        this.redraw();
+    }
+},false);
+
+//===========================================================================
+
+canvas.addEventListener('mousedown',function(evt)
+{
+    document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
+    this.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+    this.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+    if(canvas.started && canvas.state == "move") {
+        this.dragStart = ctx.transformedPoint(this.lastX,this.lastY);
+    }
+},false);
+
+//===========================================================================
+
+canvas.addEventListener('mouseup',function(evt)
+{
+    if(canvas.started && canvas.state == "move") {
+        this.dragStart = null;
+    }
+},false);
+
+//===========================================================================
+
+canvas.addEventListener('mouseleave',function(evt)
+{
+    if(canvas.started && canvas.state == "move") {
+        this.dragStart = null;
+    }
+},false);
+
+//===========================================================================
+
+canvas.addEventListener('mousemove',function(evt){
+          this.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+          this.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+           if(canvas.started && canvas.state == "move") {
+          if (this.dragStart){
+            var pt = ctx.transformedPoint(this.lastX,this.lastY);
+            ctx.translate(pt.x-this.dragStart.x,pt.y-this.dragStart.y);
+            this.redraw();
+                }
+           }
+},false);
+
+//===========================================================================
+
+
+canvas.drawCoordinates = function (x,y) {
+    ctx.fillStyle = "#c0392b"; // Red color
+    ctx.beginPath(); //Start path
+    ctx.arc(x, y, this.pointSize, 0, Math.PI * 2, true); // Draw a point using the arc function of the canvas with a point structure.
+    ctx.fill(); // Close the path and fill.
+}
+
+//===========================================================================
+
+canvas.drawLine = function (p1, p2) {
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.strokeStyle = "#d35400";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fill();
+}
+
+canvas.drawBezier = function (points) {
+   var f = 0;
+   var t = 1;
+   
+   if(points.length == 0) {
+     return;
+   }
+   var pts = [];
+   
+   this.drawCoordinates(points[0].x,points[0].y);
+   
+   var j = 0;
+   for (var i = 0; i < points.length; i++) {
+     pts[j] = points[i].x;
+     pts[j+1] = points[i].y;
+     j += 2;
+     this.drawCoordinates(points[i].x,points[i].y);
+   }
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0], pts[1]);
+  
+	var res = ctx.curve(pts, 0.5, 20, true);
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = "#2980b9";
+	ctx.stroke();
+	
+	console.log(res);
+	
+  /*
+  var m = 0;
+  var dx1 = 0;
+  var dy1 = 0;
+
+  var preP = points[0];
+  
+  this.drawCoordinates(preP.x,preP.y);
+  
+  for (var i = 1; i < points.length - 1; i++) {
+    
+      console.log("loop");
+                var curP = points[i];
+                this.drawCoordinates(curP.x,curP.y);
+                nexP = points[i + 1];
+                if (nexP) {
+                    m = this.gradient(preP, nexP);
+                    dx2 = (nexP.x - curP.x) * -f;
+                    dy2 = dx2 * m * t;
+                } else {
+                    dx2 = 0;
+                    dy2 = 0;
+                }
+                ctx.bezierCurveTo(preP.x - dx1, preP.y - dy1, curP.x + dx2, curP.y + dy2, curP.x, curP.y);
+                dx1 = dx2;
+                dy1 = dy2;
+                preP = curP;
+  }
+  ctx.stroke();*/
+
+}
+
+//===========================================================================
+
+canvas.gradient = function (a, b) {
+    return (b.y-a.y)/(b.x-a.x);
+}
+
+//===========================================================================
+
+canvas.zoom = function(clicks){
+    if(canvas.started ) {
+        var pt = ctx.transformedPoint(this.lastX,this.lastY);
+        ctx.translate(pt.x,pt.y);
+        var factor = Math.pow(this.scaleFactor,clicks);
+        this.currentScale *= factor;
+        ctx.scale(factor,factor);
+        ctx.translate(-pt.x,-pt.y);
+        this.redraw();
+    }
+}
+
+//===========================================================================
+
+var handleScroll = function(evt){
+  if(canvas.started ) {
+          var delta = evt.wheelDelta ? evt.wheelDelta/40 : evt.detail ? -evt.detail : 0;
+          if (delta) canvas.zoom(delta);
+          return evt.preventDefault() && false;
+}
+      };
+    
+//===========================================================================    
+      
+canvas.addEventListener('DOMMouseScroll',handleScroll,false);
+
+//===========================================================================
+
+canvas.addEventListener('mousewheel',handleScroll,false);
+
+//===========================================================================
+
+canvas.redraw = function (){
+
+          // Clear the entire canvas
+          var p1 = ctx.transformedPoint(0,0);
+          var p2 = ctx.transformedPoint(this.width,this.height);
+          ctx.clearRect(p1.x,p1.y,p2.x-p1.x,p2.y-p1.y);
+
+          ctx.save();
+          ctx.setTransform(1,0,0,1,0,0);
+          ctx.clearRect(0,0,this.width,this.height);
+          ctx.restore();
+
+          ctx.drawImage(ima1,0,0);
+          
+          for (var i = 0; i < this.indexPoint2D; i++) {
+              this.drawCoordinates(this.arrayPoint2D[i].x, this.arrayPoint2D[i].y); 
+          }
+          
+          for (var i = 0; i < this.indexSegment2D; i++) {
+              var p1 = this.arraySegment2D[i].p1;
+              var p2 = this.arraySegment2D[i].p2;
             
-              
-$("#canvas").click(function(e){
-    getPosition(e); 
+              if(p2) {
+                 this.drawCoordinates(p1.x, p1.y);
+                 this.drawCoordinates(p2.x, p2.y);
+                 this.drawLine(p1, p2);
+              } else {
+                this.drawCoordinates(p1.x, p1.y);
+              }
+          }
+          
+          this.drawBezier(this.curve.points);
+}
+
+//===========================================================================
+
+$("#buttonMoveImage").click(function(e){
+  if(canvas.started) {
+    if(canvas.state == "move") {
+      canvas.state = "nothing";
+      $("#buttonMoveImage").html('Start move image');
+    } else {
+      canvas.state = "move";
+       $("#buttonMoveImage").html('Stop move image');
+       $("#buttonDrawPoint").html('Start draw point');
+       $("#buttonDrawSegment").html('Start draw segment');
+       $("#buttonDrawCurve").html('Start draw curve');
+    }
+  }
 });
 
-var pointSize = 3;
+//===========================================================================
 
-var ima2D = null;
+$("#buttonDrawPoint").click(function(e){
+    if(canvas.started) {
+        if(canvas.state == "drawPoint") {
+          canvas.state = "nothing";
+          $("#buttonDrawPoint").html('Start draw point');
+        } else {
+          canvas.state = "drawPoint";
+           $("#buttonDrawPoint").html('Stop draw point');
+            $("#buttonMoveImage").html('Start move image');
+            $("#buttonDrawSegment").html('Start draw segment');
+            $("#buttonDrawCurve").html('Start draw curve');
+        }
+    }
+});
 
-/**
- * Object Image2D
- **/
-function Image2D(path, image) {
-  this.path = path;
-  this.segmentID = 0;
-  this.arraySegment2D = [];
-  this.pointID = 0;
-  this.arrayPoint2D = [];
-  this.image = image;
-  this.finish = false;
+//===========================================================================
+
+$("#buttonDrawSegment").click(function(e){
+    if(canvas.started) {
+        if(canvas.state == "drawSegment") {
+          canvas.state = "nothing";
+          $("#buttonDrawSegment").html('Start draw segment');
+        } else {
+          canvas.state = "drawSegment";
+           $("#buttonDrawSegment").html('Stop draw segment');
+            $("#buttonMoveImage").html('Start move image');
+            $("#buttonDrawPoint").html('Start draw point');
+            $("#buttonDrawCurve").html('Start draw curve');
+        }
+    }
+});
+
+
+
+$("#buttonDrawCurve").click(function(e){
+    if(canvas.started) {
+        if(canvas.state == "drawCurve") {
+          canvas.state = "nothing";
+          $("#buttonDrawCurve").html('Start draw curve');
+        } else {
+          canvas.state = "drawCurve";
+           $("#buttonDrawCurve").html('Stop draw curve');
+            $("#buttonMoveImage").html('Start move image');
+            $("#buttonDrawPoint").html('Start draw point');
+            $("#buttonDrawSegment").html('Start draw segment');
+        }
+    }
+});
+
+
+//===========================================================================
+
+$("#deleteLastElement").click(function(e){ 
+  
+    if(canvas.started) {
+        if(canvas.state == "drawPoint") {
+            if(canvas.indexPoint2D > 0) {
+                canvas.indexPoint2D--;
+                canvas.arrayPoint2D.pop();
+            }
+        }
+        
+        if(canvas.state == "drawSegment") {
+            if(canvas.indexSegment2D > 0) {
+                  if(canvas.indexSegment2D == 1) {
+                    canvas.firstSegment = true;
+                  }
+                  canvas.indexSegment2D--;
+                  canvas.arraySegment2D.pop();
+            }
+        }
+        
+        if(canvas.state == "drawCurve") {
+            if(canvas.curve.size > 0) {
+                canvas.curve.size--;
+                canvas.curve.points.pop();
+            }
+        }
+        
+        canvas.redraw();
+    }
+});
+
+
+$("#clearImage").click(function(e){
+    if(canvas.started) {
+        canvas.indexPoint2D = 0;
+        canvas.arrayPoint2D = [];
+        canvas.indexSegment2D = 0;
+        canvas.arraySegment2D = [];
+        canvas.firstSegment = true;
+        canvas.curve.size = 0;
+        canvas.curve.points = [];
+        canvas.redraw();
+    }
+});
+
+//===========================================================================
+
+function trackTransforms(ctx){
+      var svg = document.createElementNS("http://www.w3.org/2000/svg",'svg');
+      var xform = svg.createSVGMatrix();
+      ctx.getTransform = function(){ return xform; };
+
+      var savedTransforms = [];
+      var save = ctx.save;
+      ctx.save = function(){
+          savedTransforms.push(xform.translate(0,0));
+          return save.call(ctx);
+      };
+    
+      var restore = ctx.restore;
+      ctx.restore = function(){
+        xform = savedTransforms.pop();
+        return restore.call(ctx);
+		      };
+
+      var scale = ctx.scale;
+      ctx.scale = function(sx,sy){
+        xform = xform.scaleNonUniform(sx,sy);
+        return scale.call(ctx,sx,sy);
+		      };
+    
+      var rotate = ctx.rotate;
+      ctx.rotate = function(radians){
+          xform = xform.rotate(radians*180/Math.PI);
+          return rotate.call(ctx,radians);
+      };
+    
+      var translate = ctx.translate;
+      ctx.translate = function(dx,dy){
+          xform = xform.translate(dx,dy);
+          return translate.call(ctx,dx,dy);
+      };
+    
+      var transform = ctx.transform;
+      ctx.transform = function(a,b,c,d,e,f){
+          var m2 = svg.createSVGMatrix();
+          m2.a=a; m2.b=b; m2.c=c; m2.d=d; m2.e=e; m2.f=f;
+          xform = xform.multiply(m2);
+          return transform.call(ctx,a,b,c,d,e,f);
+      };
+    
+      var setTransform = ctx.setTransform;
+      ctx.setTransform = function(a,b,c,d,e,f){
+          xform.a = a;
+          xform.b = b;
+          xform.c = c;
+          xform.d = d;
+          xform.e = e;
+          xform.f = f;
+          return setTransform.call(ctx,a,b,c,d,e,f);
+      };
+    
+      var pt  = svg.createSVGPoint();
+      ctx.transformedPoint = function(x,y){
+          pt.x=x; pt.y=y;
+          return pt.matrixTransform(xform.inverse());
+      }
 }
 
-/**
- * Object Segment2D
- **/
-function Segment2D(id, p1, p2) {
-  this.id = id;
-  this.p1 = p1;
-  this.p2 = p2;
 }
+
+//===========================================================================
+
+function drawImage(path) {
+    var p1 = ctx.transformedPoint(0,0);
+    var p2 = ctx.transformedPoint(canvas.width,canvas.height);
+    ctx.clearRect(p1.x,p1.y,p2.x-p1.x,p2.y-p1.y);
+    ctx.save();
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.restore();
+    ima1 = new Image;
+    ima1.onload = function () {
+        ctx.drawImage(ima1,0,0);
+    };
+    ima1.src = path;
+}
+
+//===========================================================================
 
 /**
  * Object Point2D  
  **/
-function Point2D(id, x,y) {
+var Point2D = function (id, x,y) {
   this.id = id;
   this.x = x;
   this.y = y;
 }
 
-function Partition(id, type) {
+//===========================================================================
+
+/**
+ * Object Segment2D
+ **/
+var Segment2D = function (id, p1, p2) {
+  this.id = id;
+  this.p1 = p1;
+  this.p2 = p2;
+}
+
+//===========================================================================
+
+var Curve2D = function (id) {
+   this.id = id;
+   this.size = 0;
+   this.points = [];
+}
+
+//===========================================================================
+
+var Partition = function (id, type) {
    this.id = id;
    this.type = type;
    this.size = 0;
    this.content = [];
 }
 
-function printPoint2D(point) {
-  var res = "Point2D-{id : " + point.id + "; x : " + point.x + "; y : " + point.y + "}\n";
-  console.log(res);
-}
+//===========================================================================
 
-/**
- * @param part : Partition 
- * @param element : Point2D or Segment2D or 
- **/
-function addElementToPartition(part, element) {
-  
-  
-}
-
-function getPosition(event){
-  if(ima2D) {
-    var rect = canvas.getBoundingClientRect();
-    var x = event.clientX - rect.left; // x == the location of the click in the document - the location (relative to the left) of the canvas in the document
-    var y = event.clientY - rect.top; // y == the location of the click in the document - the location (relative to the top) of the canvas in the document
-    var p = new Point2D(ima2D.pointID, x, y);
-    ima2D.arrayPoint2D[ima2D.pointID] = p;
-    drawCoordinates(x,y);
-    if(ima2D.pointID > 0) {
-      drawSegment(ima2D.arrayPoint2D[ima2D.pointID-1], p);
-    } 
-    ima2D.pointID++;
-  }
-}
-
-function drawCoordinates(x,y){
-        console.log("draw point" + x + " - " + y);
+$(document).keypress(function(e){
+ 
+        var key = e.originalEvent.key;
         
-        var ctx = document.getElementById("canvas").getContext("2d");
-        ctx.fillStyle = "#ff2626"; // Red color
-        ctx.beginPath(); //Start path
-        ctx.arc(x, y, pointSize, 0, Math.PI * 2, true); // Draw a point using the arc function of the canvas with a point structure.
-        //ctx.stroke();
-        ctx.fill(); // Close the path and fill.
-}
-
-function drawSegment(p1, p2) {
-    var ctx = document.getElementById("canvas").getContext("2d");
-    ctx.beginPath();
-    ctx.moveTo( p1.x, p1.y);
-    ctx.lineTo(p2.x, p2.y);
-    ctx.strokeStyle = "#ff2626";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fill();
-    var seg2D = new Segment2D(ima2D.segmentID, p1, p2);
-    ima2D.arraySegment2D[ima2D.segmentID] = seg2D;
-    ima2D.segmentID++;
-}
-
-function drawLastSegment() {
-  if(ima2D) {
-    if(ima2D.pointID > 2) { //minimum 3 points
-        drawSegment(ima2D.arrayPoint2D[0], ima2D.arrayPoint2D[ima2D.pointID-1]);
-    } else {
-       alert("We need minimum 3 points");
-    }
-  }
-}
-
-function drawPoint(p) {
-   ima2D.arrayPoint2D[ima2D.pointID] = p;
-   drawCoordinates(p.x, p.y);
-   ima2D.pointID++;
-}
-
-function deleteLastElement() {
-    if(ima2D) {
-      
-        var segmentID = ima2D.segmentID;
-        var arraySegment2D = ima2D.arraySegment2D;
-        
-        for (var i = 0; i < segmentID; i++) {
-          var s = ima2D.arraySegment2D[i];
-          arraySegment2D[i] = new Segment2D(s.id, s.p1, s.p2);
-        }
-        
-        var pointID = ima2D.pointID;
-        var arrayPoint2D = [];
-        for (var i = 0; i < pointID; i++) {
-           var p = ima2D.arrayPoint2D[i];
-           arrayPoint2D[i] = new Point2D(p.id, p.x, p.y);
-        }
-      
-        var path = ima2D.path;
-
-        var canvas = document.getElementById("canvas");
-        var ctx = document.getElementById('canvas');
-        
-        ctx = ctx.getContext('2d');
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-       
-        var img1 = new Image();
-        
-        img1.onload = function () {
-     
-            ctx.drawImage(img1, 0, 0);
-                        ctx.fillStyle = "rgba(127, 140, 141, 0.2)";
-            ctx.fillRect(0, 0, 800, 600);
-  
-            for (var i = 0; i < pointID - 1; i++) {
-              drawPoint(arrayPoint2D[i]);
+        if(canvas.started && key == "p") {
+          
+          if(canvas.state == "drawPoint") {
+              canvas.state = "nothing";
+              $("#buttonDrawPoint").html('Start draw point');
+          } else {
+              canvas.state = "drawPoint";
+              $("#buttonDrawPoint").html('Stop draw point');
+              $("#buttonMoveImage").html('Start move image');
+              $("#buttonDrawSegment").html('Start draw segment');
+          }
+          
+        } else if(canvas.started && key == "m") {
+            if(canvas.state == "move") {
+              canvas.state = "nothing";
+              $("#buttonMoveImage").html('Start move image');
+            } else {
+              canvas.state = "move";
+               $("#buttonMoveImage").html('Stop move image');
+               $("#buttonDrawPoint").html('Start draw point');
+               $("#buttonDrawSegment").html('Start draw segment');
             }
-         
-             for (var i = 0; i < segmentID - 1; i++) {
-                drawSegment(arraySegment2D[i].p1, arraySegment2D[i].p2);
-             }
-        };
+        } else if (canvas.started && key == "s") {
+            if(canvas.state == "drawSegment") {
+              canvas.state = "nothing";
+              $("#buttonDrawSegment").html('Start draw segment');
+            } else {
+              canvas.state = "drawSegment";
+               $("#buttonDrawSegment").html('Stop draw segment');
+                $("#buttonMoveImage").html('Start move image');
+                $("#buttonDrawPoint").html('Start draw point');
+            }
+        } else if (canvas.started && key == "c") {
+              canvas.indexPoint2D = 0;
+              canvas.arrayPoint2D = [];
+              canvas.indexSegment2D = 0;
+              canvas.arraySegment2D = [];
+              canvas.firstSegment = true;
+              canvas.curve.size = 0;
+              canvas.curve.points = [];
+              canvas.redraw();
+          
         
-              img1.src = path;
-      
-              ima2D = new Image2D(path, img1);
-         
+        } else {
+          
+        }
+});
 
-    }
-}
-
-
-function drawImage(path) {
-  
-  var canvas = document.getElementById("canvas");
-  var ctx = document.getElementById('canvas');
-
-  if (ctx.getContext) {
-    
-        ctx = ctx.getContext('2d');
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        //Loading of the home test image - img1
-        var img1 = new Image();
-
-        //drawing of the test image - img1
-        img1.onload = function () {
-            //draw background image
-            ctx.drawImage(img1, 0, 0);
-            //draw a box over the top
-            ctx.fillStyle = "rgba(127, 140, 141, 0.2)";
-            ctx.fillRect(0, 0, 800, 600);
-
-        };
-        
-      imageLoad = true;
-        
-      img1.src = path;
-      
-      ima2D = new Image2D(path, img1);
-    
-  }
-}
   </script>
