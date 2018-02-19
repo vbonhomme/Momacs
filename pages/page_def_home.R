@@ -10,15 +10,16 @@ tabHome = fluidPage(
   shinyFilesButton('files', label='Choose jpg file', title='Please select a jpg file', multiple=FALSE),
   verbatimTextOutput('filepaths'),
   
-  br(), br(),
+  br(),
   
-  actionButton("run", "Run",  class="btn btn-success"),
- # actionButton("end", "End",  class="btn btn-danger"),
+  actionButton("run", "Run",  class="btn btn-success"), 
+  #actionButton("end", "End",  class="btn btn-danger"),
   downloadButton("downloadData", "Download", class="btn btn-primary"),
-  
+
   br(), br(),
   actionButton("buttonMoveImage", "Start move image", class="btn btn-primary"),
   actionButton("clearImage", "Clear Image", class="btn btn-warning"),
+  actionButton("deleteLastElement", "Delete last element in current draw mode", class="btn btn-warning"),
   
   br(), br(),
   
@@ -28,7 +29,9 @@ tabHome = fluidPage(
   
   br(), br(),
   
-  actionButton("deleteLastElement", "Delete Last Element", class="btn btn-warning"),
+ actionButton("buttonDeletePoint", "Start delete point", class="btn btn-warning"),
+ actionButton("buttonDeletePointSegment", "Start delete point and segment", class="btn btn-warning"),
+ actionButton("buttonDeletePointCurve", "Start delete point and curve", class="btn btn-warning"),
   
   br(), br(),
   

@@ -4,7 +4,7 @@ Shiny.addCustomMessageHandler("run",
   
     console.log(path_image);
     
-     if(path_image == "undefined") {
+     if(path_image == "undefined" || path_image == "./images/tmp/" || path_image == "images/tmp/") {
         alert("Please, load image before run");
      } else {
         canvas.started = true;

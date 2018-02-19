@@ -1,4 +1,6 @@
 <div>
+  <p id="mode"><b>Mode </b>: nothing</p>
+  
   <canvas id="canvas" width="800" height="600" style="cursor:crosshair;"></canvas>
   
 </div>
@@ -18,6 +20,8 @@ canvas.lastX=canvas.width/2;
 canvas.lastY=canvas.height/2;
 canvas.currentScale = 1;
 canvas.dragStart = null;
+
+canvas.idPoint = 0;
 
 canvas.indexPoint2D = 0;
 canvas.arrayPoint2D = [];
@@ -45,40 +49,154 @@ canvas.curve = new Curve2D(0);
 
 canvas.addEventListener('click',function(evt)
 {
-    this.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-    this.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
-    var pt = ctx.transformedPoint(this.lastX,this.lastY);
-    if(canvas.started && canvas.state == "drawPoint") {
-        this.drawCoordinates(pt.x,pt.y);
-        var point = new Point2D(this.indexSegment2D, pt.x, pt.y);
-        this.arrayPoint2D.push(point);
-        this.indexPoint2D++;
-    } else if(canvas.started && canvas.state == "drawSegment") {
-        this.drawCoordinates(pt.x,pt.y);
-        var p = new Point2D(this.indexPoint2D, pt.x, pt.y);
-        if(this.firstSegment) {
-           if(this.indexSegment2D == 0) {
-              var s = new Segment2D(this.indexSegment2D, p, null);
+  if(canvas.started) {
+        this.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+        this.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+        var pt = ctx.transformedPoint(this.lastX,this.lastY);
+        if(canvas.state == "drawPoint") {
+            this.drawCoordinates(pt.x,pt.y);
+            var point = new Point2D(this.idPoint, pt.x, pt.y);
+            this.arrayPoint2D.push(point);
+            this.indexPoint2D++;
+            this.idPoint++;
+        } else if(canvas.state == "drawSegment") {
+            this.drawCoordinates(pt.x,pt.y);
+            var p = new Point2D(this.idPoint, pt.x, pt.y);
+            this.idPoint++;
+            if(this.firstSegment) {
+               if(this.indexSegment2D == 0) {
+                  var s = new Segment2D(this.indexSegment2D, p, null);
+                  this.arraySegment2D.push(s);
+                  this.indexSegment2D++;
+               } else {
+                  this.arraySegment2D[this.indexSegment2D - 1].p2 = p;
+                  this.drawLine(this.arraySegment2D[this.indexSegment2D - 1].p1, p);
+                  this.firstSegment = false;
+               }
+            } else {
+              var lastp = this.arraySegment2D[this.indexSegment2D - 1].p2;
+              var s = new Segment2D(this.indexSegment2D, lastp, p);
+              this.drawLine(lastp, p);
               this.arraySegment2D.push(s);
               this.indexSegment2D++;
-           } else {
-              this.arraySegment2D[this.indexSegment2D - 1].p2 = p;
-              this.drawLine(this.arraySegment2D[this.indexSegment2D - 1].p1, p);
-              this.firstSegment = false;
-           }
-        } else {
-          var lastp = this.arraySegment2D[this.indexSegment2D - 1].p2;
-          var s = new Segment2D(this.indexSegment2D, lastp, p);
-          this.drawLine(lastp, p);
-          this.arraySegment2D.push(s);
-          this.indexSegment2D++;
+            }
+        } else if(canvas.state == "drawCurve") {
+            var p = new Point2D(this.idPoint, pt.x, pt.y);
+            this.idPoint++;
+            this.curve.points.push(p);
+            this.curve.size++;
+            this.redraw();
+        } else if(canvas.state == "deletePoint") {
+            var point = new Point2D(0, pt.x, pt.y);
+            var indexToDelete = null;
+            for (var i = 0; i < this.indexPoint2D; i++) {
+                var d = this.distance(point, this.arrayPoint2D[i]);
+                if(d <= this.pointSize) {
+                   indexToDelete = i;
+                   break;
+                }
+            }
+            if(indexToDelete != null) { //we found à point to delete
+                var newPoints = [];
+                for (var i = 0; i < this.indexPoint2D; i++) {
+                  if(i != indexToDelete){
+                     newPoints.push(this.arrayPoint2D[i]);
+                  }
+                }
+                this.arrayPoint2D = newPoints;
+                this.indexPoint2D--;
+            }
+            this.redraw();
+        } else if(canvas.state == "deletePointSegment") {
+            var point = new Point2D(0, pt.x, pt.y);
+            var indexToDelete = null;
+            var pToDelete = null;
+            for (var i = 0; i < this.indexSegment2D; i++) {
+                var d1 = this.distance(point, this.arraySegment2D[i].p1);
+                var d2 = this.distance(point, this.arraySegment2D[i].p2);
+                if(d1 <= this.pointSize) {
+                   indexToDelete = i;
+                   pToDelete = 1;
+                   break;
+                } else if(d2 <= this.pointSize) {
+                   indexToDelete = i;
+                   pToDelete = 2;
+                   break;
+                }
+            }
+            if(indexToDelete != null) { //we found à point to delete
+              
+            
+               var newSegments = [];
+               if(indexToDelete == 0 && pToDelete == 1) { //cas particulier de 1er
+                  for (var i = 1; i < this.indexSegment2D; i++) {
+                    newSegments.push(this.arraySegment2D[i]);
+                  }
+                  this.arraySegment2D = newSegments;
+                  this.indexSegment2D--;
+               } else if(indexToDelete == this.indexSegment2D - 1 && pToDelete == 2) { //cas particulier du dernier
+                    for (var i = 0; i < this.indexSegment2D - 1; i++) {
+                        newSegments.push(this.arraySegment2D[i]);
+                    }
+                  this.arraySegment2D = newSegments;
+                  this.indexSegment2D--;
+               } else { 
+                  for (var i = 0; i < this.indexSegment2D; i++) {
+                    if(indexToDelete == i) {
+                        //normalement c toujour p2
+                         var old = this.arraySegment2D[i];
+                         var old2 = this.arraySegment2D[i+1];
+                         var p1 = new Point2D(old.p1.id, old.p1.x, old.p1.y);
+                         var p2 = new Point2D(old2.p2.id, old2.p2.x, old2.p2.y);
+                         var newss = new Segment2D(old.id, p1, p2);
+                         newSegments.push(newss);
+                    } else {
+                       if(indexToDelete+1 == i) {
+                          //nothing to do                         
+                       } else {
+                          newSegments.push(this.arraySegment2D[i]);
+                       }
+                    }
+                  }
+                  this.arraySegment2D = newSegments;
+                  this.indexSegment2D--;
+               }
+            }
+            
+            if(this.indexSegment2D == 0) {
+              canvas.firstSegment = true;
+            }
+            
+            this.redraw();
+        } else if(canvas.state == "deletePointCurve") {
+            var point = new Point2D(0, pt.x, pt.y);
+            var indexToDelete = null;
+            for (var i = 0; i < this.curve.size; i++) {
+                var d = this.distance(point, this.curve.points[i]);
+                if(d <= this.pointSize) {
+                   indexToDelete = i;
+                   break;
+                }
+            }
+            
+             if(indexToDelete != null) {
+                 
+                  var newPoints = [];
+          
+                  for (var i = 0; i < this.curve.size; i++) {
+                      if(i != indexToDelete){
+                          newPoints.push(this.curve.points[i]);
+                      }
+                  }
+                  this.curve.points = newPoints;
+                  this.curve.size--;
+                
+            }
+            
+            
+          this.redraw();
         }
-    } else if(canvas.started && canvas.state == "drawCurve") {
-        var p = new Point2D(this.indexPoint2D, pt.x, pt.y);
-        this.curve.points.push(p);
-        this.curve.size++;
-        this.redraw();
-    }
+  }
 },false);
 
 //===========================================================================
@@ -127,9 +245,14 @@ canvas.addEventListener('mousemove',function(evt){
 
 //===========================================================================
 
+canvas.distance = function (p1, p2) {
+  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+}
+
+//===========================================================================
 
 canvas.drawCoordinates = function (x,y) {
-    ctx.fillStyle = "#c0392b"; // Red color
+    ctx.fillStyle = "#e74c3c"; // Red color
     ctx.beginPath(); //Start path
     ctx.arc(x, y, this.pointSize, 0, Math.PI * 2, true); // Draw a point using the arc function of the canvas with a point structure.
     ctx.fill(); // Close the path and fill.
@@ -141,7 +264,7 @@ canvas.drawLine = function (p1, p2) {
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
     ctx.lineTo(p2.x, p2.y);
-    ctx.strokeStyle = "#d35400";
+    ctx.strokeStyle = "#2ecc71";
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fill();
@@ -171,41 +294,8 @@ canvas.drawBezier = function (points) {
   
 	var res = ctx.curve(pts, 0.5, 20, true);
 	ctx.lineWidth = 2;
-	ctx.strokeStyle = "#2980b9";
+	ctx.strokeStyle = "#3498db";
 	ctx.stroke();
-	
-	console.log(res);
-	
-  /*
-  var m = 0;
-  var dx1 = 0;
-  var dy1 = 0;
-
-  var preP = points[0];
-  
-  this.drawCoordinates(preP.x,preP.y);
-  
-  for (var i = 1; i < points.length - 1; i++) {
-    
-      console.log("loop");
-                var curP = points[i];
-                this.drawCoordinates(curP.x,curP.y);
-                nexP = points[i + 1];
-                if (nexP) {
-                    m = this.gradient(preP, nexP);
-                    dx2 = (nexP.x - curP.x) * -f;
-                    dy2 = dx2 * m * t;
-                } else {
-                    dx2 = 0;
-                    dy2 = 0;
-                }
-                ctx.bezierCurveTo(preP.x - dx1, preP.y - dy1, curP.x + dx2, curP.y + dy2, curP.x, curP.y);
-                dx1 = dx2;
-                dy1 = dy2;
-                preP = curP;
-  }
-  ctx.stroke();*/
-
 }
 
 //===========================================================================
@@ -284,18 +374,56 @@ canvas.redraw = function (){
 
 //===========================================================================
 
+canvas.changeMode = function(mode) {
+   $("#buttonMoveImage").html('Start move image');
+   $("#buttonDrawPoint").html('Start draw point');
+   $("#buttonDrawSegment").html('Start draw segment');
+   $("#buttonDrawCurve").html('Start draw curve');
+   $("#buttonDeletePoint").html('Start delete point');
+   $("#buttonDeletePointSegment").html('Start delete point and segment');
+   $("#buttonDeletePointCurve").html('Start delete point and curve');
+   
+   $("#mode").html("<b>Mode </b>: " + mode);
+   
+   if(mode == "move") {
+     $("#buttonMoveImage").html('Stop move image');
+   }
+   
+   if(mode == "drawPoint") {
+      $("#buttonDrawPoint").html('Stop draw point');
+   }
+   
+   if(mode == "drawSegment") {
+     $("#buttonDrawSegment").html('Stop draw segment');
+   }
+   
+   if(mode == "drawCurve") {
+     $("#buttonDrawCurve").html('Stop draw curve');
+   }
+   
+   if(mode == "deletePoint") {
+      $("#buttonDeletePoint").html('Stop delete point');
+   }
+   
+   if(mode == "deletePointSegment") {
+     $("#buttonDeletePointSegment").html('Stop delete point and segment');
+   }
+   
+    if(mode == "deletePointCurve") {
+     $("#buttonDeletePointCurve").html('Stop delete point and curve');
+   }
+}
+
+//===========================================================================
+
 $("#buttonMoveImage").click(function(e){
   if(canvas.started) {
     if(canvas.state == "move") {
       canvas.state = "nothing";
-      $("#buttonMoveImage").html('Start move image');
     } else {
       canvas.state = "move";
-       $("#buttonMoveImage").html('Stop move image');
-       $("#buttonDrawPoint").html('Start draw point');
-       $("#buttonDrawSegment").html('Start draw segment');
-       $("#buttonDrawCurve").html('Start draw curve');
     }
+    canvas.changeMode(canvas.state);
   }
 });
 
@@ -305,14 +433,11 @@ $("#buttonDrawPoint").click(function(e){
     if(canvas.started) {
         if(canvas.state == "drawPoint") {
           canvas.state = "nothing";
-          $("#buttonDrawPoint").html('Start draw point');
         } else {
           canvas.state = "drawPoint";
-           $("#buttonDrawPoint").html('Stop draw point');
-            $("#buttonMoveImage").html('Start move image');
-            $("#buttonDrawSegment").html('Start draw segment');
-            $("#buttonDrawCurve").html('Start draw curve');
         }
+        
+        canvas.changeMode(canvas.state);
     }
 });
 
@@ -322,34 +447,66 @@ $("#buttonDrawSegment").click(function(e){
     if(canvas.started) {
         if(canvas.state == "drawSegment") {
           canvas.state = "nothing";
-          $("#buttonDrawSegment").html('Start draw segment');
         } else {
           canvas.state = "drawSegment";
-           $("#buttonDrawSegment").html('Stop draw segment');
-            $("#buttonMoveImage").html('Start move image');
-            $("#buttonDrawPoint").html('Start draw point');
-            $("#buttonDrawCurve").html('Start draw curve');
         }
+        
+        canvas.changeMode(canvas.state);
     }
 });
 
-
+//===========================================================================
 
 $("#buttonDrawCurve").click(function(e){
     if(canvas.started) {
         if(canvas.state == "drawCurve") {
           canvas.state = "nothing";
-          $("#buttonDrawCurve").html('Start draw curve');
         } else {
           canvas.state = "drawCurve";
-           $("#buttonDrawCurve").html('Stop draw curve');
-            $("#buttonMoveImage").html('Start move image');
-            $("#buttonDrawPoint").html('Start draw point');
-            $("#buttonDrawSegment").html('Start draw segment');
         }
+        canvas.changeMode(canvas.state);
     }
 });
 
+
+//===========================================================================
+
+$("#buttonDeletePoint").click(function(e){ 
+    if(canvas.started) {
+      if(canvas.state == "deletePoint") {
+          canvas.state = "nothing";
+      } else {
+         canvas.state = "deletePoint";
+      }
+      canvas.changeMode(canvas.state);
+    }
+});
+
+//===========================================================================
+
+$("#buttonDeletePointSegment").click(function(e){ 
+    if(canvas.started) {
+      if(canvas.state == "deletePointSegment") {
+          canvas.state = "nothing";
+      } else {
+         canvas.state = "deletePointSegment";
+      }
+      canvas.changeMode(canvas.state);
+    }
+});
+
+//===========================================================================
+
+$("#buttonDeletePointCurve").click(function(e){ 
+    if(canvas.started) {
+      if(canvas.state == "deletePointCurve") {
+          canvas.state = "nothing";
+      } else {
+         canvas.state = "deletePointCurve";
+      }
+      canvas.changeMode(canvas.state);
+    }
+});
 
 //===========================================================================
 
@@ -525,40 +682,39 @@ var Partition = function (id, type) {
 $(document).keypress(function(e){
  
         var key = e.originalEvent.key;
-        
+      
         if(canvas.started && key == "p") {
           
           if(canvas.state == "drawPoint") {
               canvas.state = "nothing";
-              $("#buttonDrawPoint").html('Start draw point');
           } else {
               canvas.state = "drawPoint";
-              $("#buttonDrawPoint").html('Stop draw point');
-              $("#buttonMoveImage").html('Start move image');
-              $("#buttonDrawSegment").html('Start draw segment');
           }
+          canvas.changeMode(canvas.state);
           
         } else if(canvas.started && key == "m") {
             if(canvas.state == "move") {
               canvas.state = "nothing";
-              $("#buttonMoveImage").html('Start move image');
             } else {
               canvas.state = "move";
-               $("#buttonMoveImage").html('Stop move image');
-               $("#buttonDrawPoint").html('Start draw point');
-               $("#buttonDrawSegment").html('Start draw segment');
             }
+            canvas.changeMode(canvas.state);
         } else if (canvas.started && key == "s") {
             if(canvas.state == "drawSegment") {
               canvas.state = "nothing";
-              $("#buttonDrawSegment").html('Start draw segment');
             } else {
               canvas.state = "drawSegment";
-               $("#buttonDrawSegment").html('Stop draw segment');
-                $("#buttonMoveImage").html('Start move image');
-                $("#buttonDrawPoint").html('Start draw point');
             }
+            canvas.changeMode(canvas.state);
         } else if (canvas.started && key == "c") {
+            if(canvas.state == "drawCurve") {
+              canvas.state = "nothing";
+            } else {
+              canvas.state = "drawCurve";
+            }
+            canvas.changeMode(canvas.state);
+        
+        } else if (canvas.started && key == "r") {
               canvas.indexPoint2D = 0;
               canvas.arrayPoint2D = [];
               canvas.indexSegment2D = 0;
@@ -567,8 +723,6 @@ $(document).keypress(function(e){
               canvas.curve.size = 0;
               canvas.curve.points = [];
               canvas.redraw();
-          
-        
         } else {
           
         }
