@@ -8,6 +8,7 @@ Shiny.addCustomMessageHandler("run",
         alert("Please, load image before run");
      } else {
         canvas.started = true;
+        canvas.imagePath = path_image;
         drawImage(path_image);
      }
   }
@@ -17,10 +18,11 @@ Shiny.addCustomMessageHandler("run",
 Shiny.addCustomMessageHandler("end",
   function(message) {
     
-    /*if(!ima2D) {
+    if(!canvas.started) {
         alert("Please, load image before run");
     } else {
-       Shiny.onInputChange("endImage", ima2D);
-    }*/
+       console.log(canvas.imagePath);
+       Shiny.onInputChange("endImage", canvas);
+    }
   }
 );

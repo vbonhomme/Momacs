@@ -29,6 +29,7 @@ UI <- dashboardPage(
     shinyjs::useShinyjs(),
     tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.min.readable.css")) ,
     tags$head(tags$script(src = "message-handler.js")),
+    tags$head(tags$script(src =  "config.js")),
     tags$head(tags$script(src =  "curves.js")),
     tags$head(style),
     tabItems(

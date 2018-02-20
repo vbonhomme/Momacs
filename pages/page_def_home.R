@@ -13,7 +13,7 @@ tabHome = fluidPage(
   br(),
   
   actionButton("run", "Run",  class="btn btn-success"), 
-  #actionButton("end", "End",  class="btn btn-danger"),
+  actionButton("end", "End",  class="btn btn-danger"),
   downloadButton("downloadData", "Download", class="btn btn-primary"),
 
   br(), br(),

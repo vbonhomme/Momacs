@@ -20,6 +20,7 @@ canvas.lastX=canvas.width/2;
 canvas.lastY=canvas.height/2;
 canvas.currentScale = 1;
 canvas.dragStart = null;
+canvas.imagePath = "";
 
 canvas.idPoint = 0;
 
@@ -321,7 +322,7 @@ canvas.distance = function (p1, p2) {
 //===========================================================================
 
 canvas.drawCoordinates = function (x,y) {
-    ctx.fillStyle = "#e74c3c"; // Red color
+    ctx.fillStyle = momacs_config.color_point; // Red color
     ctx.beginPath(); //Start path
     ctx.arc(x, y, this.pointSize, 0, Math.PI * 2, true); // Draw a point using the arc function of the canvas with a point structure.
     ctx.fill(); // Close the path and fill.
@@ -333,8 +334,8 @@ canvas.drawLine = function (p1, p2) {
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
     ctx.lineTo(p2.x, p2.y);
-    ctx.strokeStyle = "#2ecc71";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = momacs_config.color_segment;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.fill();
 }
@@ -362,8 +363,9 @@ canvas.drawBezier = function (points) {
   ctx.moveTo(pts[0], pts[1]);
   
 	var res = ctx.curve(pts, 0.5, 20, true);
-	ctx.lineWidth = 2;
-	ctx.strokeStyle = "#3498db";
+	this.curve.allpts = res;
+	ctx.lineWidth = 1.5;
+	ctx.strokeStyle = momacs_config.color_curve;
 	ctx.stroke();
 }
 
@@ -790,6 +792,7 @@ var Curve2D = function (id) {
    this.id = id;
    this.size = 0;
    this.points = [];
+   this.allpts = null;
 }
 
 //===========================================================================

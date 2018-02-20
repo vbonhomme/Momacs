@@ -3,8 +3,11 @@ observeEvent(input$run, {
   images <- parseFilePaths(roots, session$userData$imageFiles)
   
   #TODO check when multi files
-  imagesPath <- toString(images$datapath)
-  imagesName <- toString(images$name)
+  
+  
+  
+  imagesPath <<- toString(images$datapath)
+  imagesName <<- toString(images$name)
   
   #roots = c(wd='/')
   #data <<- parseFilePaths(roots, input$files)
@@ -96,46 +99,101 @@ observeEvent(input$files, {
 
 observeEvent(input$endImage, {
   
- print(input$endImage.path);
-  result <<- paste0(input$endImage$path, ".txt");
- 
   
-  result <<- str_replace_all(result, "images", "www/images")
-  print(result);
+  
+  #print(input$endImage$imagePath);
+  result <- paste0(input$endImage$imagePath, ".mom");
+  
+  
+ 
+  os <- get_os()
+  
+  if(os == "linux") {
+    result <- str_replace_all(result, "images", "www/images")
+  } else if(os == "osx") {
+    result <- str_replace_all(result, "./", "")
+  } else {
+    #TODO finish for window
+  }
+
+  #print(result);
+  
+  momFile <<- result;
   
   file.create(result);
   
-  shinyjs::enable("downloadData")
-  shinyjs::show("downloadData")
+
   
   fileConn<-file(result)
-  txt <- paste0("Image : ", input$endImage$path, "\n")
-  #writeLines(, fileConn)
-  for (i in 1:input$endImage$pointID){
+  txt <- paste0("Name: ", imagesName, "\n")
+  txt <- paste0("Path: ", imagesPath, "\n")
+  
+  txt = paste0(txt, "#Point2D", "\n")
+  
+
+  
+  if(input$endImage$indexPoint2D > 0) {
+  for (i in 1:input$endImage$indexPoint2D){
     p = input$endImage$arrayPoint2D[[i]]
     txt = paste0(txt, "Point2D - {id:  ", p$id, "; x: ", p$x, "; y:", p$y, "}\n")
-    
+  }
+}
+  
+  txt = paste0(txt, "#Segment2D", "\n")
+  
+  if(input$endImage$indexSegment2D > 0) {
+  for (i in 1:input$endImage$indexSegment2D){
+    s = input$endImage$arraySegment2D[[i]]
+    p1 = s$p1
+    p2 = s$p2
+    if(i == 1) {
+      txt = paste0(txt, "Point2D - {id:  ", p1$id, "; x: ", p1$x, "; y:", p1$y, "}\n")
+    }
+    txt = paste0(txt, "Point2D - {id:  ", p2$id, "; x: ", p2$x, "; y:", p2$y, "}\n")
   }
   
-  for (i in 1:input$endImage$segmentID){
+  for (i in 1:input$endImage$indexSegment2D){
     s = input$endImage$arraySegment2D[[i]]
     txt = paste0(txt, "Segment2D - {id:  ", s$id, "; p1: ", s$p1$id, "; p2:", s$p2$id, "}\n")
   }
+    
+  }
   
+  txt = paste0(txt, "#Curve2D", "\n")
+  
+  
+  if(input$endImage$curve$size > 0) {
+  for (i in 1:input$endImage$curve$size){
+     p = input$endImage$curve$points[[i]]
+     txt = paste0(txt, "Point2D - {id:  ", p$id, "; x: ", p$x, "; y:", p$y, "}\n")
+  }
+    
+  txt = paste0(txt, "#Curve2D_all_points", "\n")
+  for(x in input$endImage$curve$allpts) {
+    txt = paste0(txt, x, " ")
+  }
+  
+  txt = paste0(txt, "\n")
+  
+  
+  }
+
   writeLines(txt, fileConn)
-  
-  
+
   close(fileConn)
+  
+  shinyjs::enable("downloadData")
+  shinyjs::show("downloadData")
   
   
 })
 
 output$downloadData <- downloadHandler(
   filename = function() {
-    paste("result", ".txt", sep = "")
+    paste0(imagesName, ".mom")
   },
   content = function(f) {
     #write.csv(datasetInput(), file, row.names = FALSE)
-    file.copy(result, f)
+    file.copy(momFile, f)
   }
 )
