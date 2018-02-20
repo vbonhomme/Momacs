@@ -23,17 +23,25 @@ tabHome = fluidPage(
   
   br(), br(),
   
-  actionButton("buttonDrawPoint", "Start draw point", class="btn btn-primary"),
-  actionButton("buttonDrawSegment", "Start draw segment", class="btn btn-primary"),
-  actionButton("buttonDrawCurve", "Start draw curve", class="btn btn-primary"),
+  actionButton("buttonDrawPoint", "Start draw point", class="btn btn-info"),
+  actionButton("buttonDrawSegment", "Start draw segment", class="btn btn-info"),
+  actionButton("buttonDrawCurve", "Start draw curve", class="btn btn-info"),
   
   br(), br(),
   
- actionButton("buttonDeletePoint", "Start delete point", class="btn btn-warning"),
- actionButton("buttonDeletePointSegment", "Start delete point and segment", class="btn btn-warning"),
- actionButton("buttonDeletePointCurve", "Start delete point and curve", class="btn btn-warning"),
+  actionButton("buttonMovePoint", "Start move point", class="btn btn-primary"),
+  actionButton("buttonMovePointSegment", "Start move point and segment", class="btn btn-primary"),
+  actionButton("buttonMovePointCurve", "Start move point and curve", class="btn btn-primary"),
   
   br(), br(),
+  
+  actionButton("buttonDeletePoint", "Start delete point", class="btn btn-warning"),
+  actionButton("buttonDeletePointSegment", "Start delete point and segment", class="btn btn-warning"),
+  actionButton("buttonDeletePointCurve", "Start delete point and curve", class="btn btn-warning"),
+  
+  br(), br(),
+ 
+
   
   #actionButton("delete", "Delete image on server",  class="btn btn-danger"),
   includeHTML(path = "./www/image.html")

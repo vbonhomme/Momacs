@@ -32,6 +32,8 @@ canvas.firstSegment = true;
 
 canvas.curve = null;
 
+canvas.draggedPoint = null;
+
 //canvas.arrayPartionPoint2D = [];
 //canvas.arrayPartitionSegment2D = [];
 //canvas.arrayPartitionSegment2D = [];
@@ -203,44 +205,111 @@ canvas.addEventListener('click',function(evt)
 
 canvas.addEventListener('mousedown',function(evt)
 {
+  if(canvas.started) {
     document.body.style.mozUserSelect = document.body.style.webkitUserSelect = document.body.style.userSelect = 'none';
     this.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
     this.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
-    if(canvas.started && canvas.state == "move") {
-        this.dragStart = ctx.transformedPoint(this.lastX,this.lastY);
+    var pt = ctx.transformedPoint(this.lastX,this.lastY);
+    if(canvas.state == "move") {
+        this.dragStart = pt;
     }
+    
+    if(this.state == "movePoint") {
+        var point = new Point2D(0, pt.x, pt.y);
+        for (var i = 0; i < this.indexPoint2D; i++) {
+            var d = this.distance(point, this.arrayPoint2D[i]);
+            if(d <= this.pointSize) {
+                 this.draggedPoint = this.arrayPoint2D[i];
+                 break;
+            }
+        }
+    }
+    
+    if(this.state == "movePointSegment") {
+      var point = new Point2D(0, pt.x, pt.y);
+      for (var i = 0; i < this.indexSegment2D; i++) {
+                var d1 = this.distance(point, this.arraySegment2D[i].p1);
+                var d2 = this.distance(point, this.arraySegment2D[i].p2);
+                if(d1 <= this.pointSize) {
+                   this.draggedPoint = this.arraySegment2D[i].p1;
+                   break;
+                } else if(d2 <= this.pointSize) {
+                   this.draggedPoint = this.arraySegment2D[i].p2;
+                   break;
+                }
+      }
+    }
+    
+    if(this.state == "movePointCurve") {
+        var point = new Point2D(0, pt.x, pt.y);
+        for (var i = 0; i < this.curve.size; i++) {
+               var d = this.distance(point, this.curve.points[i]);
+               if(d <= this.pointSize) {
+                 this.draggedPoint = this.curve.points[i];
+                 break;
+              }
+          }
+    }
+    
+  }
 },false);
 
 //===========================================================================
 
 canvas.addEventListener('mouseup',function(evt)
 {
-    if(canvas.started && canvas.state == "move") {
+  if(this.started) {
+    if(this.state == "move") {
         this.dragStart = null;
     }
+    
+    if(this.state == "movePoint" || this.state == "movePointSegment" || this.state == "movePointCurve") {
+        this.draggedPoint = null;
+    }
+  }
 },false);
 
 //===========================================================================
 
 canvas.addEventListener('mouseleave',function(evt)
 {
-    if(canvas.started && canvas.state == "move") {
+  if(this.started) {
+    if(this.state == "move") {
         this.dragStart = null;
     }
+    
+    if(this.state == "movePoint" || this.state == "movePointSegment" || this.state == "movePointCurve") {
+        this.draggedPoint = null;
+    }
+  }
 },false);
 
 //===========================================================================
 
 canvas.addEventListener('mousemove',function(evt){
-          this.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
-          this.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
-           if(canvas.started && canvas.state == "move") {
-          if (this.dragStart){
-            var pt = ctx.transformedPoint(this.lastX,this.lastY);
-            ctx.translate(pt.x-this.dragStart.x,pt.y-this.dragStart.y);
-            this.redraw();
-                }
+  
+    if(canvas.started) {
+        this.lastX = evt.offsetX || (evt.pageX - canvas.offsetLeft);
+        this.lastY = evt.offsetY || (evt.pageY - canvas.offsetTop);
+        var pt = ctx.transformedPoint(this.lastX,this.lastY);
+        if(canvas.state == "move") {
+              if (this.dragStart){
+                
+                ctx.translate(pt.x-this.dragStart.x,pt.y-this.dragStart.y);
+                this.redraw();
+              }
+        }
+        
+        if(this.state == "movePoint" || this.state == "movePointSegment"|| this.state == "movePointCurve") {
+           if(this.draggedPoint) {
+              this.draggedPoint.x = pt.x;
+              this.draggedPoint.y = pt.y;
+              this.redraw();
            }
+        }
+        
+        
+    }
 },false);
 
 //===========================================================================
@@ -382,6 +451,10 @@ canvas.changeMode = function(mode) {
    $("#buttonDeletePoint").html('Start delete point');
    $("#buttonDeletePointSegment").html('Start delete point and segment');
    $("#buttonDeletePointCurve").html('Start delete point and curve');
+   $("#buttonMovePoint").html('Start move point');
+   $("#buttonMovePointSegment").html('Start move point and segment');
+   $("#buttonMovePointCurve").html('Start move point and curve');
+   
    
    $("#mode").html("<b>Mode </b>: " + mode);
    
@@ -411,6 +484,18 @@ canvas.changeMode = function(mode) {
    
     if(mode == "deletePointCurve") {
      $("#buttonDeletePointCurve").html('Stop delete point and curve');
+   }
+   
+   if(mode == "movePoint") {
+      $("#buttonMovePoint").html('Stop move point');
+   }
+   
+   if(mode == "movePointSegment") {
+     $("#buttonMovePointSegment").html('Stop move point and segment');
+   }
+   
+    if(mode == "movePointCurve") {
+     $("#buttonMovePointCurve").html('Stop move point and curve');
    }
 }
 
@@ -503,6 +588,45 @@ $("#buttonDeletePointCurve").click(function(e){
           canvas.state = "nothing";
       } else {
          canvas.state = "deletePointCurve";
+      }
+      canvas.changeMode(canvas.state);
+    }
+});
+
+//===========================================================================
+
+$("#buttonMovePoint").click(function(e){ 
+    if(canvas.started) {
+      if(canvas.state == "movePoint") {
+          canvas.state = "nothing";
+      } else {
+         canvas.state = "movePoint";
+      }
+      canvas.changeMode(canvas.state);
+    }
+});
+
+//===========================================================================
+
+$("#buttonMovePointSegment").click(function(e){ 
+    if(canvas.started) {
+      if(canvas.state == "movePointSegment") {
+          canvas.state = "nothing";
+      } else {
+         canvas.state = "movePointSegment";
+      }
+      canvas.changeMode(canvas.state);
+    }
+});
+
+//===========================================================================
+
+$("#buttonMovePointCurve").click(function(e){ 
+    if(canvas.started) {
+      if(canvas.state == "movePointCurve") {
+          canvas.state = "nothing";
+      } else {
+         canvas.state = "movePointCurve";
       }
       canvas.changeMode(canvas.state);
     }
