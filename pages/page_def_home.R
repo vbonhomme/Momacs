@@ -29,6 +29,11 @@ tabHome = fluidPage(
   
   br(), br(),
   
+  actionButton("buttonAddPointOnSegment", "Start add point on segment", class="btn btn-info"),
+  actionButton("buttonAddPointOnCurve", "Start add point on curve", class="btn btn-info"),
+  
+  br(), br(),
+  
   actionButton("buttonMovePoint", "Start move point", class="btn btn-primary"),
   actionButton("buttonMovePointSegment", "Start move point and segment", class="btn btn-primary"),
   actionButton("buttonMovePointCurve", "Start move point and curve", class="btn btn-primary"),
@@ -40,6 +45,8 @@ tabHome = fluidPage(
   actionButton("buttonDeletePointCurve", "Start delete point and curve", class="btn btn-warning"),
   
   br(), br(),
+  
+  
  
 
   
