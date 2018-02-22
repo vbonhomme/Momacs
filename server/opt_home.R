@@ -118,6 +118,16 @@ observeEvent(input$nextI, {
 
 })
 
+observeEvent(input$saveI, {
+  
+  if(!is.null(session$userData$listimages)) {
+    
+    session$sendCustomMessage(type = 'end', message = "save")
+    
+  }
+  
+})
+
 observeEvent(input$previousI, {
 
   if(!is.null(session$userData$listimages)) {

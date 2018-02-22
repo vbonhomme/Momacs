@@ -29,7 +29,8 @@ tabHome = fluidPage(
   
   br(),
   
-  actionButton("run", "Run",  class="btn btn-success"), 
+  actionButton("run", "Run",  class="btn btn-success"),
+  actionButton("saveI", "Save",  class="btn btn-success"), 
   
   selectInput("selectimages", "Chose image:", c()),
   
