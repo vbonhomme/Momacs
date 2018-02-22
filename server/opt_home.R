@@ -1,17 +1,55 @@
 observeEvent(input$run, {
-  roots = c(wd='/')
-  images <- parseFilePaths(roots, session$userData$imageFiles)
+  roots = c(wd='/') #TODO change for window
+  #images <- parseFilePaths(roots, session$userData$imageFiles)
+
+  images <- session$userData$imageFiles
+  
+  if(!is.null(input$pathImages)) {
+    #no in load but in input path
+    ff <- list.files(path = input$pathImages)
+    
+    dbjpg <- ff[grep(".jpg", ff, fixed=T)]
+    dbpng <- ff[grep(".png", ff, fixed=T)]
+    dbbmp <- ff[grep(".bmp", ff, fixed=T)]
+    dbjpeg <- ff[grep(".jpeg", ff, fixed=T)]
+    ff <- c(dbjpg, dbpng, dbbmp, dbjpeg)
+
+    ffpath <- NULL 
+    
+    if(str_sub(input$pathImages, start= -1) != "/") {
+      ffpath <- paste0(input$pathImages, "/", ff)
+    } else {
+      ffpath <- paste0(input$pathImages, ff)
+    }
+    
+
+    
+    session$userData$listimages <- data.frame(name = ff, datapath=ffpath, havemom = logical(length = length(ffpath)))
+    
+    session$userData$imageFiles <- session$userData$listimages[1,]
+    
+    updateSelectInput(session, "selectimages", label = "Chose image:", choices = session$userData$listimages$name)
+    
+  }
+  
+  images <- session$userData$imageFiles
+  
+  gestion_image(images)
+  
+})
+
+
+
+
+gestion_image <- function(images) {
   
   #TODO check when multi files
-  
-  
-  
-  imagesPath <<- toString(images$datapath)
-  imagesName <<- toString(images$name)
+  imagesPath <- toString(images$datapath)
+  imagesName <- toString(images$name)
   
   #roots = c(wd='/')
   #data <<- parseFilePaths(roots, input$files)
-
+  
   #print(data)
   
   #print(input$files$datapath);
@@ -37,7 +75,7 @@ observeEvent(input$run, {
       realPath <-  "images/tmp"
     } else {
       #TODO window
-       sep <- "\\"
+      sep <- "\\"
     }
     
     
@@ -49,12 +87,136 @@ observeEvent(input$run, {
     # newFile <- paste0("./images/", numb, "/0.jpg")
     newFile <- paste0(newdir, sep, imagesName)
     realPath <- paste0(realPath, sep, imagesName)
+    
+    
+    if(!is.null(session$userData$lastjavascriptimage)) {
+        if(file.exists(session$userData$lastjavascriptimage)) {
+           #on supprime l'ancienne image
+           file.remove(session$userData$lastjavascriptimage)
+        }
+    }
+    
+    #on stocke la nouvelle image
+    session$userData$lastjavascriptimage <- newFile
+    
     file.copy(imagesPath, newFile)
-
+    
   }
   
   session$sendCustomMessage(type = 'run',
                             message = realPath)
+  
+}
+
+observeEvent(input$nextI, {
+  
+  if(!is.null(session$userData$listimages)) {
+    
+    session$sendCustomMessage(type = 'end', message = "next")
+
+  }
+
+})
+
+observeEvent(input$previousI, {
+
+  if(!is.null(session$userData$listimages)) {
+    
+    size <- length(session$userData$listimages$datapath)
+    
+    if(session$userData$indexImage > 1) {
+
+      
+      session$userData$indexImage <- session$userData$indexImage - 1
+ 
+      session$userData$imageFiles <- session$userData$listimages[session$userData$indexImage,]
+      
+      index <- paste0(session$userData$indexImage, " / ",  length(session$userData$listimages$datapath))
+      
+      session$sendCustomMessage(type = 'index',
+                                message = index)
+      
+      session$sendCustomMessage(type = 'clear',
+                                message = "clear")
+      
+      updateSelectInput(session, "selectimages", label = "Chose image:", choices = session$userData$listimages$name, selected = session$userData$imageFiles$name)
+      
+      images <- session$userData$imageFiles
+      gestion_image(images)
+    }
+    
+  }
+  
+})
+
+observeEvent(input$firstI, {
+  
+  if(!is.null(session$userData$listimages)) {
+    session$userData$indexImage <- 1
+    
+    session$userData$imageFiles <- session$userData$listimages[session$userData$indexImage,]
+    
+    index <- paste0(session$userData$indexImage, " / ",  length(session$userData$listimages$datapath))
+    
+    session$sendCustomMessage(type = 'index',
+                              message = index)
+    
+    session$sendCustomMessage(type = 'clear',
+                              message = "clear")
+    
+    updateSelectInput(session, "selectimages", label = "Chose image:", choices = session$userData$listimages$name, selected = session$userData$imageFiles$name)
+    
+    images <- session$userData$imageFiles
+    gestion_image(images)
+  }
+  
+})
+
+observeEvent(input$lastI, {
+  
+  if(!is.null(session$userData$listimages)) {
+    session$userData$indexImage <- length(session$userData$listimages$datapath)
+    
+    session$userData$imageFiles <- session$userData$listimages[session$userData$indexImage,]
+    
+    index <- paste0(session$userData$indexImage, " / ",  length(session$userData$listimages$datapath))
+    
+    session$sendCustomMessage(type = 'index',
+                              message = index)
+    
+    session$sendCustomMessage(type = 'clear',
+                              message = "clear")
+    
+    updateSelectInput(session, "selectimages", label = "Chose image:", choices = session$userData$listimages$name, selected = session$userData$imageFiles$name)
+    
+    images <- session$userData$imageFiles
+    gestion_image(images)
+  }
+  
+})
+
+
+observeEvent(input$selectimages, {
+  
+  #TODO save last in .mom
+
+  if(!is.null(session$userData$listimages)) {
+    session$userData$imageFiles <- session$userData$listimages[grep(input$selectimages, session$userData$listimages$name),]
+    
+    session$userData$indexImage <- grep(input$selectimages, session$userData$listimages$name)[1]
+    
+    index <- paste0(session$userData$indexImage, " / ",  length(session$userData$listimages$datapath))
+    
+    session$sendCustomMessage(type = 'index',
+                              message = index)
+    
+    session$sendCustomMessage(type = 'clear',
+                              message = "clear")
+    
+
+    images <- session$userData$imageFiles
+    gestion_image(images)
+  }
 })
 
 get_os <- function(){
@@ -88,43 +250,62 @@ observeEvent(input$delete, {
 })
 
 roots = c(wd='/')
-shinyFileChoose(input, 'files', root=roots)
+shinyFileChoose(input, 'files', root=roots, filetypes=c("jpeg", "gif", "bmp", "png", "jpg"))
 
 observeEvent(input$files, {
+  roots = c(wd='/')
+  images <- parseFilePaths(roots, input$files)
 
-  session$userData$imageFiles <- input$files
-  output$filepaths <- renderPrint({parseFilePaths(roots, input$files)})
+  session$userData$listimages <- cbind(images)
+  session$userData$listimages$havemom <- logical(length = length(images$datapath))
+  
+  session$userData$indexImage <- 1
+  
+  index <- paste0(session$userData$indexImage, " / ",  length(images$datapath))
+  
+  session$sendCustomMessage(type = 'index',
+                            message = index)
+  
+  #on selectionne la première
+  session$userData$imageFiles <- session$userData$listimages[1,]
+  
+  updateSelectInput(session, "selectimages", label = "Chose image:", choices = session$userData$listimages$name)
+  
+  
+  images <- session$userData$imageFiles
+  
+  
+  gestion_image(images)
 
 })
 
+
+
+
+
 observeEvent(input$endImage, {
   
+  size <- length(session$userData$listimages$datapath)
+  
+  images <- session$userData$imageFiles
+  
+  result <- paste0(file_path_sans_ext(images$datapath), ".mom");
   
   
-  #print(input$endImage$imagePath);
-  result <- paste0(input$endImage$imagePath, ".mom");
   
-  
- 
-  os <- get_os()
-  
-  if(os == "linux") {
-    result <- str_replace_all(result, "images", "www/images")
-  } else if(os == "osx") {
-    result <- str_replace_all(result, "./", "")
-  } else {
-    #TODO finish for window
+  if(file.exists(result)) {
+    file.remove(result)
   }
-
-  #print(result);
-  
-  momFile <<- result;
   
   file.create(result);
   
+  imagesPath <- toString(images$datapath)
+  imagesName <- toString(images$name)
 
-  
   fileConn<-file(result)
+  
+ 
+  
   txt <- paste0("Name: ", imagesName, "\n")
   txt <- paste0("Path: ", imagesPath, "\n")
   
@@ -159,7 +340,7 @@ observeEvent(input$endImage, {
     
   }
   
-  txt = paste0(txt, "#Curve2D", "\n")
+  txt = paste0(txt, "#Curve2D: ", input$endImage$typeofcurve, "\n")
   
   
   if(input$endImage$curve$size > 0) {
@@ -182,10 +363,33 @@ observeEvent(input$endImage, {
 
   close(fileConn)
   
-  shinyjs::enable("downloadData")
-  shinyjs::show("downloadData")
-  
-  
+  if(input$endImage$typeevent == "next") { # event next image 
+    
+    if(session$userData$indexImage < size) {
+      
+      session$userData$indexImage <- session$userData$indexImage + 1
+      
+      session$userData$imageFiles <- session$userData$listimages[session$userData$indexImage,]
+      
+      
+      index <- paste0(session$userData$indexImage, " / ",  length(session$userData$listimages$datapath))
+      
+      session$sendCustomMessage(type = 'index',
+                                message = index)
+      
+      session$sendCustomMessage(type = 'clear',
+                                message = "clear")
+      
+      updateSelectInput(session, "selectimages", label = "Chose image:", choices = session$userData$listimages$name, selected = session$userData$imageFiles$name)
+      
+      images <- session$userData$imageFiles
+      gestion_image(images)
+      
+      
+    } 
+    
+  }
+
 })
 
 output$downloadData <- downloadHandler(

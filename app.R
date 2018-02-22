@@ -15,6 +15,7 @@ library(shinyjs)
 library(yaml)
 library(stringr)
 library(shinyFiles)
+library(tools)
 
 
 source("./pages/page_def_home.R", local = T)
@@ -46,6 +47,9 @@ server <- function( input, output, session) {
   shinyjs::hide("downloadData")
   shinyjs::disable("downloadData")
   
+  session$userData$listimages <- NULL
+
+
   source("./server/opt_home.R", local=TRUE)
   
 }

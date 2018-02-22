@@ -1,6 +1,8 @@
 <div>
   <p id="mode"><b>Mode </b>: nothing</p>
   
+   <p id="indeximagecanvas"><b>Images: </b> 0 / 0</p>
+  
   <canvas id="canvas" width="800" height="600" style="cursor:crosshair;"></canvas>
   
 </div>
@@ -21,6 +23,8 @@ canvas.lastY=canvas.height/2;
 canvas.currentScale = 1;
 canvas.dragStart = null;
 canvas.imagePath = "";
+canvas.typeofcurve = "close";
+canvas.typeevent = "";
 
 canvas.idPoint = 0;
 
@@ -497,7 +501,13 @@ canvas.drawBezier = function (points) {
   ctx.beginPath();
   ctx.moveTo(pts[0], pts[1]);
   
-	var res = ctx.curve(pts, 0.5, 20, true);
+  var res = null;
+  if(this.typeofcurve == "close") {
+    res = ctx.curve(pts, 0.5, 20, true);
+  } else {
+    res = ctx.curve(pts, 0.5, 20, false);
+  }
+	
 	this.curve.allpts = res;
 	ctx.lineWidth = momacs_config.size_curve;
 	ctx.strokeStyle = momacs_config.color_curve;
@@ -561,6 +571,24 @@ var handleScroll = function(evt){
           return evt.preventDefault() && false;
 }
       };
+      
+$('input[type=radio][name=typeCurve]').change(function () {
+  
+      console.log("change");
+      
+     
+        if (this.value == 'open') {
+       canvas.typeofcurve = "open";
+        }
+        else if (this.value == 'close') {
+          canvas.typeofcurve = "close";
+        }
+ 
+            
+            if(canvas.started ) {
+              canvas.redraw();
+            }
+});
     
 //===========================================================================    
       
@@ -617,8 +645,8 @@ canvas.changeMode = function(mode) {
    $("#buttonDeletePointSegment").html('Start delete point and segment');
    $("#buttonDeletePointCurve").html('Start delete point and curve');
    $("#buttonMovePoint").html('Start move point');
-   $("#buttonMovePointSegment").html('Start move point and segment');
-   $("#buttonMovePointCurve").html('Start move point and curve');
+   $("#buttonMovePointSegment").html('Start move segment');
+   $("#buttonMovePointCurve").html('Start move curve');
    $("#buttonAddPointOnSegment").html('Start add point on segment');
    $("#buttonAddPointOnCurve").html('Start add point on curve');
    
@@ -659,11 +687,11 @@ canvas.changeMode = function(mode) {
    }
    
    if(mode == "movePointSegment") {
-     $("#buttonMovePointSegment").html('Stop move point and segment');
+     $("#buttonMovePointSegment").html('Stop move segment');
    }
    
     if(mode == "movePointCurve") {
-     $("#buttonMovePointCurve").html('Stop move point and curve');
+     $("#buttonMovePointCurve").html('Stop move curve');
    }
    
    if(mode == "addPointOnSegment") {
