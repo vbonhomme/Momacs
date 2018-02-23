@@ -257,7 +257,6 @@ canvas.addEventListener('click',function(evt)
              
              
            } else if(canvas.newCB == null) {
-                console.log(canvas.newCA );
                 for (var i = 0; i < this.curve.size; i++) {
                     var d = this.distance(point, this.curve.points[i]);
                     if(d <= this.pointSize) {
@@ -266,7 +265,6 @@ canvas.addEventListener('click',function(evt)
                     }
                 }
                 if(canvas.newCB != null) { //we found other point
-                  console.log(canvas.newCB );
                     var newPoint = [];
                     
                     //for find max in tree
@@ -287,7 +285,6 @@ canvas.addEventListener('click',function(evt)
                     var nx = (canvas.newCA.x + canvas.newCB.x) / 2;
                     var ny = (canvas.newCA.y + canvas.newCB.y) / 2;
                     var p = new Point2D(this.idPoint, nx, ny);
-                    console.log(rid);
                     var lastid = this.curve.points[this.curve.size - 1].id;
                     var firstid = this.curve.points[0].id;
                     
@@ -317,7 +314,6 @@ canvas.addEventListener('click',function(evt)
                     }
                       
                     }
-                    console.log(newPoint);
                     this.curve.points = newPoint;
                     this.curve.size++;
                     this.redraw();
@@ -573,21 +569,16 @@ var handleScroll = function(evt){
       };
       
 $('input[type=radio][name=typeCurve]').change(function () {
-  
-      console.log("change");
-      
-     
         if (this.value == 'open') {
        canvas.typeofcurve = "open";
         }
         else if (this.value == 'close') {
           canvas.typeofcurve = "close";
         }
- 
-            
-            if(canvas.started ) {
-              canvas.redraw();
-            }
+        
+        if(canvas.started ) {
+          canvas.redraw();
+        }
 });
     
 //===========================================================================    
@@ -974,6 +965,74 @@ function trackTransforms(ctx){
       }
 }
 
+}
+
+//===========================================================================
+
+canvas.loadCanvas = function (dataimage) {
+  
+  var maxID = 0;
+  
+  this.indexPoint2D = dataimage.result.point2D.length ;
+  
+  for (var i = 0; i < this.indexPoint2D; i++) {
+      var p = dataimage.result.point2D[i];
+      var point = new Point2D(p.id, p.x, p.y);
+      maxID = Math.max(maxID, p.id);
+      this.arrayPoint2D.push(point);
+  }
+
+  this.indexSegment2D = dataimage.result.segment2D.segments.length;
+  
+  var tmpPointsSegment =  dataimage.result.segment2D.points;
+  var tmp2PointsSegment = [];
+  
+  for (var i = 0; i < tmpPointsSegment.length; i++) {
+    var p = tmpPointsSegment[i];
+    var point = new Point2D(p.id, p.x, p.y);
+    tmp2PointsSegment.push(point);
+    maxID = Math.max(maxID, p.id);
+  }
+  
+  this.firstSegment = true;
+  
+  if(tmpPointsSegment.length > 2) {
+    this.firstSegment = false;
+  }
+  
+  for (var j = 0; j < this.indexSegment2D; j++) {
+  
+    var s = dataimage.result.segment2D.segments[j];
+    var p1 = null;
+    var p2 = null;
+    
+    for (var i = 0; i < tmp2PointsSegment.length; i++) {
+      if(s.p1 == tmp2PointsSegment[i].id) {
+        p1 = tmp2PointsSegment[i];
+      } 
+      
+      if(s.p2 == tmp2PointsSegment[i].id) {
+        p2 = tmp2PointsSegment[i];
+      } 
+    }
+    
+    var segment = new Segment2D(s.id, p1, p2);
+    this.arraySegment2D.push(segment);
+  }
+  
+
+  this.curve.size = dataimage.result.curve2D.points.length;
+  this.typeofcurve = dataimage.result.curve2D.type;
+  
+  for (var i = 0; i <  this.curve.size; i++) {
+     var p = dataimage.result.curve2D.points[i];
+     var point = new Point2D(p.id, p.x, p.y);
+     this.curve.points.push(point);
+     maxID = Math.max(maxID, p.id);
+  }
+  
+  this.idPoint = maxID + 1;
+  this.redraw();
 }
 
 //===========================================================================

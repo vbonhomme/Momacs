@@ -2,7 +2,7 @@ Shiny.addCustomMessageHandler("run",
   
   function(path_image) {
   
-    console.log(path_image);
+    //console.log(path_image);
     
      if(path_image == "undefined" || path_image == "./images/tmp/" || path_image == "images/tmp/") {
         alert("Please, load image before run");
@@ -13,6 +13,8 @@ Shiny.addCustomMessageHandler("run",
         canvas.started = true;
         canvas.imagePath = path_image;
         drawImage(path_image);
+        
+        Shiny.onInputChange("loadI", path_image);
      }
   }
 );
@@ -20,8 +22,6 @@ Shiny.addCustomMessageHandler("run",
 Shiny.addCustomMessageHandler("index",
 
   function(indeximage) {
-    
-    console.log(indeximage);
     $("#indeximagecanvas").html("<b>Images </b>: " + indeximage);
   }
 );
@@ -32,16 +32,16 @@ Shiny.addCustomMessageHandler("end",
     if(!canvas.started) {
         alert("Please, load image before run");
     } else {
-       console.log(canvas.imagePath);
        canvas.typeevent = message;
        Shiny.onInputChange("endImage", canvas);
     }
   }
 );
 
-Shiny.addCustomMessageHandler("clear",
+Shiny.addCustomMessageHandler("load",
   function(message) {
-        if(canvas.started) {
+    if(canvas.started) {
+
         canvas.indexPoint2D = 0;
         canvas.arrayPoint2D = [];
         canvas.indexSegment2D = 0;
@@ -49,6 +49,8 @@ Shiny.addCustomMessageHandler("clear",
         canvas.firstSegment = true;
         canvas.curve.size = 0;
         canvas.curve.points = [];
+
+        canvas.loadCanvas(message);
         canvas.redraw();
     }
   }
