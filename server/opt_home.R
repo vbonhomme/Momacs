@@ -64,7 +64,6 @@ gestion_image <- function(images) {
       
       # we need to create the two folders, consecutively
       if (!dir.exists(newdir)){
-        cat("plop")
         dir.create("www/images")
         dir.create("www/images/tmp")
       }
@@ -94,8 +93,6 @@ gestion_image <- function(images) {
     file.copy(imagesPath, newFile)
     
   }
-  
-  print(realPath)
   
   session$sendCustomMessage(type = 'run',
                             message = realPath)
