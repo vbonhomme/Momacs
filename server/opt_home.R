@@ -55,9 +55,19 @@ gestion_image <- function(images) {
     if(os == "linux") {
       newdir <- "./www/images/tmp"
       realPath <-  "./images/tmp"
+      
+      
+      
     } else if(os == "osx") {
-      newdir <- "images/tmp"
+      newdir <- "www/images/tmp"      # not sure but I think it should be www/images/tmp
       realPath <-  "images/tmp"
+      
+      # we need to create the two folders, consecutively
+      if (!dir.exists(newdir)){
+        dir.create("www/images")
+        dir.create("www/images/tmp")
+      }
+      
     } else {
       #TODO window
       sep <- "\\"
