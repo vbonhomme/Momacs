@@ -12,7 +12,7 @@ tabHome = fluidPage(
   box(width = 3, 
       
   shinyFilesButton('files', label='Load image file(s)', title='Please select a image files', multiple=TRUE, buttonType = "btn btn-primary"),
-  shinyDirButton('dirs', label='Load image dir', title='Please select a image dir', buttonType = "btn btn-primary"),
+  #shinyDirButton('dirs', label='Load image dir', title='Please select a image dir', buttonType = "btn btn-primary"),
       
   selectInput("selectimages", "Chose image:", c()),
 
