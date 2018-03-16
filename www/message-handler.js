@@ -56,3 +56,23 @@ Shiny.addCustomMessageHandler("load",
   }
 
 );
+
+Shiny.addCustomMessageHandler("new",
+  function(message) {
+    if(canvas.started) {
+
+        canvas.indexPoint2D = 0;
+        canvas.arrayPoint2D = [];
+        canvas.indexSegment2D = 0;
+        canvas.arraySegment2D = [];
+        canvas.firstSegment = true;
+        canvas.curve.size = 0;
+        canvas.curve.points = [];
+        
+        canvas.redraw();
+    }
+  }
+
+);
+
+

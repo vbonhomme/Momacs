@@ -17,7 +17,7 @@ canvas.width = 800;
 canvas.height = 600;
 canvas.state = "nothing";
 canvas.scaleFactor = 1.05;
-canvas.pointSize = momacs_config.size_point;
+canvas.pointSize = momacs_config.size_point + momacs_config.size_hover;
 canvas.lastX=canvas.width/2;
 canvas.lastY=canvas.height/2;
 canvas.currentScale = 1;
@@ -42,7 +42,6 @@ canvas.newCA = null;
 canvas.newCB = null;
 
 canvas.draggedPoint = null;
-
 
 var ctx = null;
 var ima1 = null;
@@ -423,14 +422,16 @@ canvas.addEventListener('mousemove',function(evt){
                 ctx.translate(pt.x-this.dragStart.x,pt.y-this.dragStart.y);
                 this.redraw();
               }
-        }
-        
-        if(this.state == "movePoint" || this.state == "movePointSegment"|| this.state == "movePointCurve") {
+        } else  if(this.state == "movePoint" || this.state == "movePointSegment"|| this.state == "movePointCurve") {
            if(this.draggedPoint) {
               this.draggedPoint.x = pt.x;
               this.draggedPoint.y = pt.y;
               this.redraw();
            }
+        } else  {
+          
+          this.redraw();
+          
         }
         
         
@@ -458,6 +459,15 @@ canvas.distanceSegment = function(s, p) {
 
 canvas.drawCoordinates = function (x,y) {
     ctx.fillStyle = momacs_config.color_point; // Red color
+    ctx.beginPath(); //Start path
+    ctx.arc(x, y, momacs_config.size_point, 0, Math.PI * 2, true); // Draw a point using the arc function of the canvas with a point structure.
+    ctx.fill(); // Close the path and fill.
+}
+
+//===========================================================================
+
+canvas.drawHoverPoint = function (x,y) {
+    ctx.fillStyle = momacs_config.color_hover; // Purple color
     ctx.beginPath(); //Start path
     ctx.arc(x, y, this.pointSize, 0, Math.PI * 2, true); // Draw a point using the arc function of the canvas with a point structure.
     ctx.fill(); // Close the path and fill.
@@ -606,6 +616,7 @@ canvas.redraw = function (){
           ctx.drawImage(ima1,0,0);
           
           for (var i = 0; i < this.indexPoint2D; i++) {
+              
               this.drawCoordinates(this.arrayPoint2D[i].x, this.arrayPoint2D[i].y); 
           }
           
@@ -628,69 +639,92 @@ canvas.redraw = function (){
 //===========================================================================
 
 canvas.changeMode = function(mode) {
-   $("#buttonMoveImage").html('Start move image');
-   $("#buttonDrawPoint").html('Start draw point');
-   $("#buttonDrawSegment").html('Start draw segment');
-   $("#buttonDrawCurve").html('Start draw curve');
-   $("#buttonDeletePoint").html('Start delete point');
-   $("#buttonDeletePointSegment").html('Start delete point and segment');
-   $("#buttonDeletePointCurve").html('Start delete point and curve');
-   $("#buttonMovePoint").html('Start move point');
-   $("#buttonMovePointSegment").html('Start move segment');
-   $("#buttonMovePointCurve").html('Start move curve');
-   $("#buttonAddPointOnSegment").html('Start add point on segment');
-   $("#buttonAddPointOnCurve").html('Start add point on curve');
    
-   
-   
+   $("#buttonMoveImage").removeClass("btn-danger");
+   $("#buttonMoveImage").addClass("btn-success");
+   $("#buttonDrawPoint").removeClass("btn-danger");
+   $("#buttonDrawPoint").addClass("btn-success");
+   $("#buttonDrawSegment").removeClass("btn-danger");
+   $("#buttonDrawSegment").addClass("btn-success");
+   $("#buttonDrawCurve").removeClass("btn-danger");
+   $("#buttonDrawCurve").addClass("btn-success");
+   $("#buttonAddPointOnSegment").removeClass("btn-danger");
+   $("#buttonAddPointOnSegment").addClass("btn-success");
+   $("#buttonAddPointOnCurve").removeClass("btn-danger");
+   $("#buttonAddPointOnCurve").addClass("btn-success");   
+   $("#buttonMovePoint").removeClass("btn-danger");
+   $("#buttonMovePoint").addClass("btn-success");
+   $("#buttonMovePointSegment").removeClass("btn-danger");
+   $("#buttonMovePointSegment").addClass("btn-success");
+   $("#buttonMovePointCurve").removeClass("btn-danger");
+   $("#buttonMovePointCurve").addClass("btn-success");
+   $("#buttonDeletePoint").removeClass("btn-danger");
+   $("#buttonDeletePoint").addClass("btn-success");
+   $("#buttonDeletePointSegment").removeClass("btn-danger");
+   $("#buttonDeletePointSegment").addClass("btn-success");
+   $("#buttonDeletePointCurve").removeClass("btn-danger");
+   $("#buttonDeletePointCurve").addClass("btn-success");
+  
    $("#mode").html("<b>Mode </b>: " + mode);
    
    if(mode == "move") {
-     $("#buttonMoveImage").html('Stop move image');
+    $("#buttonMoveImage").addClass("btn-danger");
+    $("#buttonMoveImage").removeClass("btn-success");
    }
    
    if(mode == "drawPoint") {
-      $("#buttonDrawPoint").html('Stop draw point');
+      $("#buttonDrawPoint").addClass("btn-danger");
+      $("#buttonDrawPoint").removeClass("btn-success");
    }
    
    if(mode == "drawSegment") {
-     $("#buttonDrawSegment").html('Stop draw segment');
+     $("#buttonDrawSegment").addClass("btn-danger");
+     $("#buttonDrawSegment").removeClass("btn-success");
    }
    
    if(mode == "drawCurve") {
-     $("#buttonDrawCurve").html('Stop draw curve');
+     $("#buttonDrawCurve").addClass("btn-danger");
+     $("#buttonDrawCurve").removeClass("btn-success");
    }
    
    if(mode == "deletePoint") {
-      $("#buttonDeletePoint").html('Stop delete point');
+      $("#buttonDeletePoint").addClass("btn-danger");
+      $("#buttonDeletePoint").removeClass("btn-success");      
    }
    
    if(mode == "deletePointSegment") {
-     $("#buttonDeletePointSegment").html('Stop delete point and segment');
+      $("#buttonDeletePointSegment").addClass("btn-danger");
+      $("#buttonDeletePointSegment").removeClass("btn-success");   
    }
    
     if(mode == "deletePointCurve") {
-     $("#buttonDeletePointCurve").html('Stop delete point and curve');
+      $("#buttonDeletePointCurve").addClass("btn-danger");
+      $("#buttonDeletePointCurve").removeClass("btn-success");   
    }
    
    if(mode == "movePoint") {
-      $("#buttonMovePoint").html('Stop move point');
+     $("#buttonMovePoint").addClass("btn-danger");
+     $("#buttonMovePoint").removeClass("btn-success");
    }
    
    if(mode == "movePointSegment") {
-     $("#buttonMovePointSegment").html('Stop move segment');
+     $("#buttonMovePointSegment").addClass("btn-danger");
+     $("#buttonMovePointSegment").removeClass("btn-success");
    }
    
     if(mode == "movePointCurve") {
-     $("#buttonMovePointCurve").html('Stop move curve');
+     $("#buttonMovePointCurve").addClass("btn-danger");
+     $("#buttonMovePointCurve").removeClass("btn-success");
    }
    
    if(mode == "addPointOnSegment") {
-     $("#buttonAddPointOnSegment").html('Stop add point on segment');
+     $("#buttonAddPointOnSegment").addClass("btn-danger");
+     $("#buttonAddPointOnSegment").removeClass("btn-success");
    }
    
    if(mode == "addPointOnCurve") {
-     $("#buttonAddPointOnCurve").html('Stop add point on curve');
+     $("#buttonAddPointOnCurve").addClass("btn-danger");
+     $("#buttonAddPointOnCurve").removeClass("btn-success");     
    }
   
 }
@@ -971,18 +1005,123 @@ function trackTransforms(ctx){
 
 canvas.loadCanvas = function (dataimage) {
   
-  var maxID = 0;
+  this.idPoint = 0;
+  this.indexSegment2D = 0;
   
-  this.indexPoint2D = dataimage.result.point2D.length ;
+  //points
   
+  this.indexPoint2D = dataimage.result.MultiPoint.length;
   for (var i = 0; i < this.indexPoint2D; i++) {
-      var p = dataimage.result.point2D[i];
-      var point = new Point2D(p.id, p.x, p.y);
-      maxID = Math.max(maxID, p.id);
+      var p = dataimage.result.MultiPoint[i];
+      var point = new Point2D(this.idPoint, p[0], p[1]);
+      this.idPoint += 1;
       this.arrayPoint2D.push(point);
   }
+  
+  //segments
+  
+  var MultiLineString = dataimage.result.MultiLineString;
+  for (var i = 0; i < MultiLineString.length; i++) {
+     var currentMLS = MultiLineString[i];
+  
+     if(currentMLS.length == 1) { //alors segment
+        var tmpPointsSegment = currentMLS[0];
+        var tmp2PointsSegment = [];
+        
+        for (var j = 0; j < tmpPointsSegment.length; j++) {
+              var p = tmpPointsSegment[j];
+              var point = new Point2D(this.idPoint, p[0], p[1]);
+              this.idPoint += 1;
+              tmp2PointsSegment.push(point);
+        }
+          this.firstSegment = true;
+  
+          if(tmpPointsSegment.length > 2) {
+            this.firstSegment = false;
+          }
+          
+          for (var j = 0; j < tmpPointsSegment.length-1; j++) {
+            var p1 = tmp2PointsSegment[j];
+            var p2 = tmp2PointsSegment[j+1];
+            var segment = new Segment2D(this.indexSegment2D, p1, p2);
+            this.arraySegment2D.push(segment);
+            this.indexSegment2D += 1;
+          }
+  
+     } else { //sinon curve
+         this.curve.size = currentMLS[0].length;
+         this.typeofcurve = "open";
+  
+          for (var j = 0; j <  this.curve.size; j++) {
+            var p = currentMLS[0][j];
+            var point = new Point2D(this.idPoint, p[0], p[1]);
+            console.log(point);
+            this.curve.points.push(point);
+            this.idPoint += 1;
+          }
+     }
+  }
+  
+  var MultiPolygon = dataimage.result.MultiPolygon;
+  for (var i = 0; i < MultiPolygon.length; i++) {
+         var currentMLS = MultiPolygon[i];
+  
+     if(currentMLS.length == 1) { //alors segment
+        var tmpPointsSegment = currentMLS[0];
+        var tmp2PointsSegment = [];
+        
+        for (var j = 0; j < tmpPointsSegment.length; j++) {
+              var p = tmpPointsSegment[j];
+              var point = new Point2D(this.idPoint, p[0], p[1]);
+              this.idPoint += 1;
+              tmp2PointsSegment.push(point);
+        }
+        
+          console.log(tmp2PointsSegment);
+        
+          this.firstSegment = true;
+  
+          if(tmpPointsSegment.length > 2) {
+            this.firstSegment = false;
+          }
+          
+          for (var j = 0; j < tmpPointsSegment.length-1; j++) {
+            var p1 = tmp2PointsSegment[j];
+            var p2 = tmp2PointsSegment[j+1];
+            
+            if(j == tmpPointsSegment.length-2) {
+              if(p1.x == p2.x) {
+                 if(p1.y == p2.y) {
+                   p2 = tmp2PointsSegment[0];
+                 }
+              }
+            }
+            
+            var segment = new Segment2D(this.indexSegment2D, p1, p2);
+            this.arraySegment2D.push(segment);
+            this.indexSegment2D += 1;
+          }
+  
+     } else { //sinon curve
+         this.curve.size = currentMLS[0].length;
+         this.typeofcurve = "close";
+  
+          for (var j = 0; j <  this.curve.size; j++) {
+            var p = currentMLS[0][j];
+            var point = new Point2D(this.idPoint, p[0], p[1]);
+            console.log(point);
+            this.curve.points.push(point);
+            this.idPoint += 1;
+          }
+     }
+    
+  }
+  
+  this.redraw();
+  
+  //curves
 
-  this.indexSegment2D = dataimage.result.segment2D.segments.length;
+  /*this.indexSegment2D = dataimage.result.segment2D.segments.length;
   
   var tmpPointsSegment =  dataimage.result.segment2D.points;
   var tmp2PointsSegment = [];
@@ -1030,9 +1169,8 @@ canvas.loadCanvas = function (dataimage) {
      this.curve.points.push(point);
      maxID = Math.max(maxID, p.id);
   }
-  
-  this.idPoint = maxID + 1;
-  this.redraw();
+  */
+
 }
 
 //===========================================================================

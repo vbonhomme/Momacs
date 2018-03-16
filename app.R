@@ -16,6 +16,7 @@ library(yaml)
 library(stringr)
 library(shinyFiles)
 library(tools)
+library(shinyBS)
 
 
 source("./pages/page_def_home.R", local = T)
