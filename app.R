@@ -16,7 +16,7 @@ library(yaml)
 library(stringr)
 library(shinyFiles)
 library(tools)
-
+library(shinyBS)
 
 source("./pages/page_def_home.R", local = T)
 source("./R/menugauche.R", local = T)
@@ -40,19 +40,7 @@ UI <- dashboardPage(
 )
 
 server <- function( input, output, session) {
-  
-  typeValue <- ""
-  typeValueSearchMarker <- ""
-  
-  shinyjs::hide("downloadData")
-  shinyjs::disable("downloadData")
-  
-  session$userData$listimages <- NULL
-
-
   source("./server/opt_home.R", local=TRUE)
-  
 }
 
 shinyApp(ui = UI, server = server)
-
