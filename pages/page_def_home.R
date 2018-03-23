@@ -43,8 +43,51 @@ tabHome = fluidPage(
   bsTooltip("clearImage", "Clear image", placement = "top", trigger = "hover", options = NULL),
   
   actionButton("deleteLastElement", "last", icon("trash"), class="btn btn-success"),
-  bsTooltip("deleteLastElement", "Delete last element", placement = "top", trigger = "hover",  options = NULL),            
-               
+  bsTooltip("deleteLastElement", "Delete last element", placement = "top", trigger = "hover",  options = NULL),     
+  
+  br(), br(),
+  
+  fluidRow(
+  
+  column(width = 3,   selectInput("selectedPartitionPoint", "Partition points:", choices = c("P0"), selected = NULL, multiple = FALSE,
+                          selectize = FALSE)),
+  column(width = 4, selectInput("selectedPartitionSegment", "Partition segments:", choices = c("S0"), selected = NULL, multiple = FALSE,
+                        selectize = FALSE)),
+  column(width = 3,   selectInput("selectedPartitionCurve", "Partition curves:", choices = c("C0"), selected = NULL, multiple = FALSE,
+                          selectize = FALSE))
+  ), 
+  
+  actionButton("buttonNewPartitionPoint", "Point", icon("plus"), class="btn btn-success"),
+  bsTooltip("buttonNewPartitionPoint", "Create new point partition", placement = "top", trigger = "hover",  options = NULL), 
+  
+  actionButton("buttonNewPartitionSegment", "Segment", icon("plus"), class="btn btn-success"),
+  bsTooltip("buttonNewPartitionSegment", "Create new segment partition", placement = "top", trigger = "hover",  options = NULL), 
+  
+  actionButton("buttonNewPartitionCurve", "Curve", icon("plus"), class="btn btn-success"),
+  bsTooltip("buttonNewPartitionCurve", "Create new curve partition", placement = "top", trigger = "hover",  options = NULL), 
+  
+  br(), br(),
+  
+  actionButton("buttonDeletePartitionPoint", "Point", icon("minus"), class="btn btn-success"),
+  bsTooltip("buttonDeletePartitionPoint", "Delete current point partition", placement = "top", trigger = "hover",  options = NULL), 
+  
+  actionButton("buttonDeletePartitionSegment", "Segment", icon("minus"), class="btn btn-success"),
+  bsTooltip("buttonDeletePartitionSegment", "Delete current segment partition", placement = "top", trigger = "hover",  options = NULL), 
+  
+  actionButton("buttonDeletePartitionCurve", "Curve", icon("minus"), class="btn btn-success"),
+  bsTooltip("buttonDeletePartitionCurve", "Delete current curve partition", placement = "top", trigger = "hover",  options = NULL), 
+  
+  br(), br(),
+  
+  actionButton("buttonClearPartitionPoint", "Point", icon("eraser"), class="btn btn-success"),
+  bsTooltip("buttonClearPartitionPoint", "Clear current point partition", placement = "top", trigger = "hover",  options = NULL), 
+  
+  actionButton("buttonClearPartitionSegment", "Segment", icon("eraser"), class="btn btn-success"),
+  bsTooltip("buttonClearPartitionSegment", "Clear current segment partition", placement = "top", trigger = "hover",  options = NULL), 
+  
+  actionButton("buttonClearPartitionCurve", "Curve", icon("eraser"), class="btn btn-success"),
+  bsTooltip("buttonClearPartitionCurve", "Clear current curve partition", placement = "top", trigger = "hover",  options = NULL), 
+  
   br(), br(),
   
   actionButton("buttonDrawPoint", "Point", icon("pencil"), class="btn btn-success"),
